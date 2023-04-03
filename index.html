@@ -12,11 +12,13 @@
         integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
         crossorigin="anonymous"></script>
     <style>
-        .card:hover {
-            transform: scale(1.1);
+        .card {
+        transition: transform 0.3s ease-in-out; /* transform 변화를 부드럽게 처리 */
         }
 
-
+        .card:hover {
+        transform: scale(1.05); /* 마우스를 올렸을 때 크기를 1.05배로 확대 */
+        }
     </style>
 </head>
 

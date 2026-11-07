@@ -1,0 +1,16 @@
+{
+  "name": "빌딩 매니저 — 관리자 앱",
+  "short_name": "빌딩 매니저",
+  "description": "시설관리(FM) 업무보고 · 결재 · 경영정보 · 안내앱 관리",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f5f8",
+  "theme_color": "#0f3d5e",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

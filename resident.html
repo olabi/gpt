@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f3d5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="입주민 안내">
+<link rel="manifest" href="manifest-resident.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>빌딩 매니저 · 입주민/입주사 안내앱</title>
+<style>
+:root{--navy:#0f3d5e;--navy2:#1a5a87;--accent:#ff7a1a;--bg:#f3f5f8;--ink:#1b2430;--sub:#5a6675;--line:#e2e6ec;--ok:#1e9e5a;--bad:#d3413b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Nanum Gothic',sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0;background:none}
+.app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:80px}
+.top{position:sticky;top:0;background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;z-index:9;padding-top:calc(14px + env(safe-area-inset-top))}
+.top .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
+.top h1{font-size:16px;flex:1;min-width:0}.top h1 small{display:block;font-size:11px;opacity:.85;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top button{background:rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:6px 9px;font-size:12px;flex:none}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--line);display:flex;z-index:9;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;padding:10px 4px;font-size:11px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+.nav button .ic{font-size:20px}.nav button.on{color:var(--navy);font-weight:700}
+.nav .bd{position:absolute;top:4px;right:calc(50% - 22px);background:var(--accent);color:#fff;border-radius:99px;font-size:10px;padding:1px 5px;font-weight:800}
+.page{padding:16px;display:none}.page.on{display:block}
+h2{font-size:19px;font-weight:800}.sub{color:var(--sub);font-size:13px}.mini{font-size:12px;color:var(--sub)}
+.card{background:#fff;border-radius:14px;padding:16px;margin-top:12px;box-shadow:0 1px 2px rgba(20,40,60,.06)}
+.chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;background:#eef1f5;color:var(--sub);vertical-align:middle}
+.chip.imp{background:#fde7e6;color:var(--bad)}.chip.new{background:#fff3d6;color:#8a6200}.chip.ok{background:#e3f6ea;color:var(--ok)}
+.it{padding:12px 0;border-bottom:1px solid var(--line)}.it:last-child{border-bottom:0}
+.it b{display:block;font-size:14.5px}.it small{color:var(--sub);font-size:12px}.it p{font-size:13.5px;margin-top:6px;white-space:pre-wrap;color:#333}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px;width:100%}
+.btn.acc{background:var(--accent)}.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}.btn.sm{width:auto;padding:7px 11px;font-size:12px;border-radius:8px}.btn:disabled{opacity:.45}
+.in{width:100%;margin-top:5px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+label.f{display:block;margin-top:12px;font-size:13px;font-weight:600;color:var(--sub)}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--sub);font-weight:600;font-size:12px}td.r,th.r{text-align:right}
+.tot{font-size:22px;font-weight:900;color:var(--navy)}
+.empty{text-align:center;color:var(--sub);padding:28px 10px;font-size:13.5px}
+.opt{display:flex;align-items:center;gap:10px;padding:12px;border:2px solid var(--line);border-radius:12px;margin-top:8px;cursor:pointer}.opt.sel{border-color:var(--navy);background:#eef3f8}.opt input{width:20px;height:20px}
+.pollbar{height:16px;background:#eef1f5;border-radius:8px;overflow:hidden;margin-top:3px}.pollbar i{display:block;height:100%;background:var(--navy2)}
+.notice{background:#fff8ee;border:1px solid #ffd9b3;border-radius:10px;padding:10px 12px;font-size:13px;color:#7a4a00;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1b2430;color:#fff;padding:10px 16px;border-radius:99px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:50}.toast.on{opacity:1}
+</style>
+</head>
+<body><div class="app">
+
+<!-- 로그인 -->
+<div id="login" style="padding:26px 20px 40px">
+  <div style="display:flex;align-items:center;gap:12px;margin-top:20px"><div style="width:52px;height:52px;border-radius:14px;background:var(--navy);display:grid;place-items:center;color:#fff;font-weight:900;font-size:20px">BM</div>
+  <div><div style="font-size:22px;font-weight:900;color:var(--navy)">입주민 · 입주사 안내</div><div class="sub">공지 · 투표 · 관리비 · 민원 · 오피스/주거용 빌딩</div></div></div>
+  <div class="card">
+    <label class="f">건물(사업장)</label><select class="in" id="lgSite"></select>
+    <label class="f">세대/호 (또는 입주사)</label><input class="in" id="lgUnit" placeholder="예) 304동 1203호 / 12층 ㈜알파">
+    <label class="f">PIN</label><input class="in" id="lgPin" type="password" inputmode="numeric" placeholder="4자리">
+    <button class="btn" style="margin-top:14px" onclick="doLogin()">접속</button>
+    <button class="btn ghost" style="margin-top:8px" onclick="showSignup()">사용 신청 (관리소 승인 필요)</button>
+    <div class="mini" style="margin-top:10px">데모: 한빛아파트 · 304동 1203호 · PIN 1234</div>
+  </div>
+  <div class="card" id="signup" style="display:none">
+    <b>사용 신청</b><div class="mini">관리소가 승인하면 접속할 수 있습니다. 계약 종료 시 권한은 자동 해제됩니다.</div>
+    <label class="f">건물 접속코드 (관리소 안내문 참조)</label><input class="in" id="sgCode" placeholder="예) HB-2026">
+    <label class="f">세대/호</label><input class="in" id="sgUnit"><label class="f">이름(상호)</label><input class="in" id="sgName"><label class="f">연락처</label><input class="in" id="sgPhone">
+    <label class="f">PIN (4자리, 접속 시 사용)</label><input class="in" id="sgPin" inputmode="numeric" maxlength="4">
+    <button class="btn acc" style="margin-top:14px" onclick="submitSignup()">신청</button>
+  </div>
+  <div class="mini" style="text-align:center;margin-top:18px" id="srcBadge"></div>
+</div>
+
+<!-- 메인 -->
+<div id="main" style="display:none">
+<header class="top"><div class="logo">BM</div><h1 id="hdName">안내<small id="hdUnit"></small></h1><button onclick="askNotif()" title="알림">🔔</button><button onclick="logout()">나가기</button></header>
+
+<section class="page on" id="p-notice">
+  <h2>공지사항</h2><div class="sub">관리소 공지 · 업무보고 · 관리비 고지 — 실시간 알림</div>
+  <div class="card" id="noticeList"></div>
+</section>
+
+<section class="page" id="p-poll">
+  <h2>투표</h2><div class="sub">표결 안건에 세대당 1표만 행사할 수 있습니다 (안건 등록·수정은 관리소)</div>
+  <div id="pollList"></div>
+</section>
+
+<section class="page" id="p-fee">
+  <h2>관리비 내역</h2><div class="sub" id="feeSub"></div><div id="feeBody"></div>
+</section>
+
+<section class="page" id="p-board">
+  <h2>게시판</h2><div class="sub">관리소 업무 안내 · 홍보물 (관리소만 게시)</div><div class="card" id="boardList"></div>
+</section>
+
+<section class="page" id="p-req">
+  <h2>민원 · 요청</h2><div class="sub">접수 즉시 관리소 앱으로 전달되어 처리 보고서로 연결됩니다</div>
+  <div class="card"><label class="f">요청 내용</label><textarea class="in" id="r_body" style="min-height:90px" placeholder="예) 복도 3층 센서등 고장"></textarea><button class="btn acc" style="margin-top:12px" onclick="addReq()">접수</button></div>
+  <div class="card" id="reqList"></div>
+</section>
+
+<nav class="nav">
+  <button class="on" onclick="go('notice',this)"><span class="ic">📢</span>공지<span class="bd" id="bdNotice" style="display:none"></span></button>
+  <button onclick="go('poll',this)"><span class="ic">🗳️</span>투표<span class="bd" id="bdPoll" style="display:none"></span></button>
+  <button onclick="go('fee',this)"><span class="ic">🧾</span>관리비</button>
+  <button onclick="go('board',this)"><span class="ic">📌</span>게시판</button>
+  <button onclick="go('req',this)"><span class="ic">🛎️</span>민원</button>
+</nav>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   안내앱 (입주민/입주사) — 관리자 앱(index.html)과 같은 데이터 저장소 사용
+   · 같은 기기/브라우저: localStorage 'bm.v2' 직접 공유
+   · 운영: Apps Script(비공개 시트)에서 사업장별 공개 데이터만 내려받음
+   ===================================================================== */
+const SHARED='bm.v2', CFG='bm.resident.cfg', SESS='bm.resident.me', SEEN='bm.resident.seen';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Number(n||0).toLocaleString('ko-KR');const today=()=>new Date().toISOString().slice(0,10);
+const now=()=>{const d=new Date();return d.toISOString().slice(0,10)+' '+d.toTimeString().slice(0,5);};const uid=()=>Math.random().toString(36).slice(2,9);
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2400);}
+const qs=new URLSearchParams(location.search);
+let cfg=JSON.parse(localStorage.getItem(CFG)||'{}');if(qs.get('gas'))cfg.gasUrl=qs.get('gas');if(qs.get('site'))cfg.site=qs.get('site');localStorage.setItem(CFG,JSON.stringify(cfg));
+let me=JSON.parse(localStorage.getItem(SESS)||'null');   // {site,unit,pin,name,residentId}
+let D=null;   // 현재 사업장 공개 데이터 {site,notices,polls,fees,board,reqs,myVotes}
+
+/* ---------- 데이터 소스 ---------- */
+const shared=()=>{try{return JSON.parse(localStorage.getItem(SHARED)||'null');}catch(e){return null;}};
+const gasUrl=()=>cfg.gasUrl||shared()?.settings?.gasUrl||'';
+async function gas(action,payload){const r=await fetch(gasUrl(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},payload||{}))});return r.json();}
+function expired(s){return !!(s&&s.contractEnd&&s.contractEnd<today());}
+// 로컬 공유 저장소에서 공개 데이터 추출 (Apps Script loadPublic과 동일 규칙)
+function publicFromShared(S,siteId,unit,pin){
+  const s=S.sites.find(x=>x.id===siteId);if(!s)return {ok:false,error:'no_site'};if(expired(s))return {ok:false,error:'expired',site:s};if(!s.announce)return {ok:false,error:'disabled'};
+  const res=S.residents.find(r=>r.site===siteId&&r.unit===unit&&r.pin===pin);
+  if(!res)return {ok:false,error:'invalid'};if(res.status==='pending')return {ok:false,error:'pending'};if(res.status!=='approved')return {ok:false,error:'revoked'};
+  const notices=S.notices.filter(n=>n.site===siteId&&(!n.unit||n.unit===unit));
+  const polls=S.polls.filter(p=>p.site===siteId).map(p=>({id:p.id,title:p.title,desc:p.desc,options:p.options,closes:p.closes,status:p.status,counts:p.options.map((_,i)=>Object.values(p.votes||{}).filter(x=>x===i).length),total:Object.keys(p.votes||{}).length,my:p.votes?.[res.id]}));
+  return {ok:true,data:{site:{id:s.id,name:s.name,type:s.type,company:S.company.name},resident:{id:res.id,name:res.name,unit:res.unit},notices,polls,fees:S.fees.filter(f=>f.site===siteId&&f.unit===unit),board:S.board.filter(b=>b.site===siteId),reqs:S.reqs.filter(q=>q.site===siteId&&q.residentId===res.id)}};}
+async function loadPublic(siteId,unit,pin){
+  if(gasUrl()){try{return await gas('loadPublic',{site:siteId,unit,pin});}catch(e){return {ok:false,error:'network'};}}
+  const S=shared();if(!S)return {ok:false,error:'no_store'};return publicFromShared(S,siteId,unit,pin);}
+async function residentAction(type,payload){
+  if(gasUrl()){try{return await gas('residentAction',{site:me?.site||payload.site,unit:me?.unit,pin:me?.pin,type,payload});}catch(e){return {ok:false,error:'network'};}}
+  const S=shared();if(!S)return {ok:false,error:'no_store'};
+  if(type==='signup'){const s=S.sites.find(x=>x.id===payload.site);if(!s||s.accessCode!==payload.code)return {ok:false,error:'code'};if(expired(s))return {ok:false,error:'expired'};
+    if(S.residents.some(r=>r.site===payload.site&&r.unit===payload.unit&&r.status!=='revoked'))return {ok:false,error:'dup'};
+    S.residents.push({id:'rs'+uid(),site:payload.site,unit:payload.unit,name:payload.name,phone:payload.phone,pin:payload.pin,status:'pending',requestedAt:today()});}
+  else{const chk=publicFromShared(S,me.site,me.unit,me.pin);if(!chk.ok)return chk;const rid=chk.data.resident.id;
+    if(type==='vote'){const p=S.polls.find(x=>x.id===payload.pollId);if(!p||p.status!=='open'||p.closes<today())return {ok:false,error:'closed'};p.votes=p.votes||{};if(p.votes[rid]!==undefined)return {ok:false,error:'voted'};p.votes[rid]=payload.option;}
+    if(type==='request'){S.reqs.push({id:'q'+uid(),site:me.site,at:now(),unit:me.unit,residentId:rid,body:payload.body,done:false});}}
+  localStorage.setItem(SHARED,JSON.stringify(S));return {ok:true};}
+
+/* ---------- 로그인 ---------- */
+function fillLogin(){const S=shared();const sel=document.getElementById('lgSite');
+  const sites=S?S.sites.filter(s=>s.announce&&!expired(s)):[];
+  sel.innerHTML=sites.length?sites.map(s=>`<option value="${s.id}" ${s.id===cfg.site?'selected':''}>${esc(s.name)}</option>`).join(''):`<option value="${esc(cfg.site||'')}">${esc(cfg.site||'(링크의 사업장)')}</option>`;
+  document.getElementById('srcBadge').textContent=gasUrl()?'연결: Google 스프레드시트(비공개)':'연결: 이 기기의 관리자 앱 데이터';}
+const errMsg={no_site:'사업장을 찾을 수 없습니다',expired:'계약이 종료되어 안내앱 사용이 해제되었습니다',disabled:'이 건물은 안내앱을 사용하지 않습니다',invalid:'세대/호 또는 PIN이 올바르지 않습니다',pending:'관리소 승인 대기 중입니다. 승인 후 접속할 수 있습니다',revoked:'사용 권한이 해제되었습니다. 관리소에 문의하세요',network:'서버에 연결할 수 없습니다',no_store:'관리자 앱 데이터가 없습니다. 안내앱 링크(?site=…&gas=…)로 접속하거나 같은 기기에서 index.html을 먼저 열어주세요',code:'접속코드가 올바르지 않습니다',dup:'이미 신청(또는 사용) 중인 세대입니다',closed:'마감된 투표입니다',voted:'이미 투표하셨습니다',unauthorized:'인증 실패'};
+async function doLogin(){const siteId=document.getElementById('lgSite').value,unit=document.getElementById('lgUnit').value.trim(),pin=document.getElementById('lgPin').value.trim();if(!unit||!pin)return toast('세대/호와 PIN을 입력하세요');
+  toast('확인 중…');const j=await loadPublic(siteId,unit,pin);if(!j.ok){alert(errMsg[j.error]||'접속 실패');return;}
+  me={site:siteId,unit,pin,name:j.data.resident.name,residentId:j.data.resident.id};localStorage.setItem(SESS,JSON.stringify(me));D=j.data;enter();}
+function enter(){document.getElementById('login').style.display='none';document.getElementById('main').style.display='block';
+  document.getElementById('hdName').firstChild.textContent=D.site.name;document.getElementById('hdUnit').textContent=`${me.unit} · ${me.name}님 · ${D.site.company}`;render();checkNew(true);}
+function logout(){me=null;localStorage.removeItem(SESS);document.getElementById('main').style.display='none';document.getElementById('login').style.display='block';fillLogin();}
+function showSignup(){const el=document.getElementById('signup');el.style.display=el.style.display==='none'?'':'none';}
+async function submitSignup(){const p={site:document.getElementById('lgSite').value,code:document.getElementById('sgCode').value.trim(),unit:document.getElementById('sgUnit').value.trim(),name:document.getElementById('sgName').value.trim(),phone:document.getElementById('sgPhone').value.trim(),pin:document.getElementById('sgPin').value.trim()};
+  if(!p.code||!p.unit||!p.name||p.pin.length<4)return toast('접속코드·세대·이름·PIN(4자리)을 입력하세요');const j=await residentAction('signup',p);if(!j.ok)return alert(errMsg[j.error]||'신청 실패');alert('신청되었습니다. 관리소 승인 후 세대/호와 PIN으로 접속하세요.');document.getElementById('signup').style.display='none';}
+
+/* ---------- 화면 ---------- */
+let cur='notice';
+function go(p,btn){cur=p;document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b===btn));if(p==='notice')markSeen();render();}
+function render(){if(!D)return;
+  const seen=JSON.parse(localStorage.getItem(SEEN)||'{}')[me.residentId]||'';
+  const ns=D.notices.slice().sort((a,b)=>(b.imp-a.imp)||b.at.localeCompare(a.at));
+  document.getElementById('noticeList').innerHTML=ns.map(n=>`<div class="it"><b>${n.imp?'<span class="chip imp">중요</span> ':''}${n.type==='report'?'<span class="chip">업무보고</span> ':n.type==='fee'?'<span class="chip">관리비</span> ':n.type==='poll'?'<span class="chip">투표</span> ':''}${n.at>seen?'<span class="chip new">NEW</span> ':''}${esc(n.title)}</b><small>${n.at} · ${esc(D.site.name)} 관리소</small><p>${esc(n.body)}</p></div>`).join('')||'<div class="empty">공지가 없습니다</div>';
+  const open=D.polls.filter(p=>p.status==='open'&&p.closes>=today()),closed=D.polls.filter(p=>!(p.status==='open'&&p.closes>=today()));
+  const pollCard=p=>{const voted=p.my!==undefined;const isOpen=p.status==='open'&&p.closes>=today();
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>${esc(p.title)}</b>${isOpen?'<span class="chip ok">진행중</span>':'<span class="chip">마감</span>'}</div><div class="mini">${esc(p.desc||'')} · 마감 ${p.closes} · 참여 ${p.total}세대</div>
+    ${(!voted&&isOpen)?p.options.map((o,i)=>`<label class="opt" onclick="this.parentNode.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));this.classList.add('sel')"><input type="radio" name="pv_${p.id}" value="${i}"> ${esc(o)}</label>`).join('')+`<button class="btn acc" style="margin-top:12px" onclick="vote('${p.id}')">투표하기</button><div class="mini" style="margin-top:6px">한 번 투표하면 변경할 수 없습니다.</div>`
+      :p.options.map((o,i)=>`<div style="margin-top:8px;font-size:13px"><div style="display:flex;justify-content:space-between"><span>${esc(o)}${p.my===i?' <span class="chip ok">내 선택</span>':''}</span><b>${p.counts[i]}표 (${p.total?Math.round(p.counts[i]/p.total*100):0}%)</b></div><div class="pollbar"><i style="width:${p.total?p.counts[i]/p.total*100:0}%"></i></div></div>`).join('')}</div>`;};
+  document.getElementById('pollList').innerHTML=(open.map(pollCard).join('')+(closed.length?'<h3 style="margin-top:18px;font-size:14px;color:var(--sub)">마감된 투표</h3>'+closed.map(pollCard).join(''):''))||'<div class="empty">진행 중인 표결 안건이 없습니다</div>';
+  const unvoted=open.filter(p=>p.my===undefined).length;const bp=document.getElementById('bdPoll');bp.style.display=unvoted?'':'none';bp.textContent=unvoted;
+  const fs=D.fees.slice().sort((a,b)=>b.month.localeCompare(a.month));document.getElementById('feeSub').textContent=`${me.unit} · 최근 ${fs.length}개월`;
+  document.getElementById('feeBody').innerHTML=fs.map(f=>{const tot=f.items.reduce((a,[,x])=>a+Number(x),0);return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>${f.month} 관리비</b><span class="tot">${fmt(tot)}원</span></div><div class="mini">납기일 ${f.due||'-'}</div><table><tr><th>항목</th><th class="r">금액(원)</th></tr>${f.items.map(([k,x])=>`<tr><td>${esc(k)}</td><td class="r">${fmt(x)}</td></tr>`).join('')}</table></div>`;}).join('')||'<div class="empty">관리비 내역이 없습니다</div>';
+  document.getElementById('boardList').innerHTML=D.board.slice().reverse().map(b=>`<div class="it"><b><span class="chip">${esc(b.cat)}</span> ${esc(b.title)}</b><small>${b.at}</small><p>${esc(b.body)}</p></div>`).join('')||'<div class="empty">게시물이 없습니다</div>';
+  document.getElementById('reqList').innerHTML=D.reqs.slice().reverse().map(r=>`<div class="it"><b>${esc(r.body)} <span class="chip ${r.done?'ok':'new'}">${r.done?'처리완료':'접수'}</span></b><small>${r.at}${r.done&&r.doneAt?' → 완료 '+r.doneAt:''}</small></div>`).join('')||'<div class="empty">접수한 민원이 없습니다</div>';
+  const newN=D.notices.filter(n=>n.at>seen).length;const bn=document.getElementById('bdNotice');bn.style.display=newN&&cur!=='notice'?'':'none';bn.textContent=newN;}
+function markSeen(){if(!me||!D)return;const o=JSON.parse(localStorage.getItem(SEEN)||'{}');o[me.residentId]=now();localStorage.setItem(SEEN,JSON.stringify(o));}
+async function vote(pid){const sel=document.querySelector(`input[name="pv_${pid}"]:checked`);if(!sel)return toast('선택지를 고르세요');if(!confirm('투표는 한 번만 가능합니다. 제출할까요?'))return;
+  const j=await residentAction('vote',{pollId:pid,option:Number(sel.value)});if(!j.ok)return alert(errMsg[j.error]||'투표 실패');toast('투표가 반영되었습니다');await reload();}
+async function addReq(){const b=document.getElementById('r_body').value.trim();if(!b)return toast('요청 내용을 입력하세요');const j=await residentAction('request',{body:b});if(!j.ok)return alert(errMsg[j.error]||'접수 실패');document.getElementById('r_body').value='';toast('접수되었습니다. 관리소에서 확인 후 처리합니다.');await reload();}
+async function reload(){if(!me)return;const j=await loadPublic(me.site,me.unit,me.pin);if(!j.ok){if(['expired','revoked','invalid','disabled'].includes(j.error)){alert(errMsg[j.error]);logout();}return;}D=j.data;render();checkNew();}
+
+/* ---------- 알림 ---------- */
+let lastCount=null;
+function askNotif(){if(!('Notification' in window))return toast('이 브라우저는 알림을 지원하지 않습니다');Notification.requestPermission().then(p=>toast(p==='granted'?'알림이 켜졌습니다 — 새 공지·투표·관리비 고지를 알려드립니다':'알림 권한: '+p));}
+function checkNew(init){if(!D)return;const n=D.notices.length;if(!init&&lastCount!==null&&n>lastCount){const latest=D.notices.slice().sort((a,b)=>b.at.localeCompare(a.at))[0];toast('새 공지: '+latest.title);if(('Notification' in window)&&Notification.permission==='granted'){try{new Notification(D.site.name+' 관리소',{body:latest.title,icon:'icon-192.png'});}catch(e){}}}lastCount=n;}
+setInterval(()=>{if(me&&gasUrl())reload();},60000);
+window.addEventListener('storage',e=>{if(e.key===SHARED&&me)reload();});
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+/* ---------- boot ---------- */
+fillLogin();
+(async()=>{if(me){const j=await loadPublic(me.site,me.unit,me.pin);if(j.ok){D=j.data;enter();}else{localStorage.removeItem(SESS);me=null;}}})();
+</script>
+</body>
+</html>

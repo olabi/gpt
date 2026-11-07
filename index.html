@@ -1,250 +1,688 @@
-<!doctype html>
-<html lang="en">
-
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>파이썬을 활용한 ChatGPT 챗봇 만들기 </title>
-    <link rel="stylesheet"
-        href="https://s3.ap-northeast-2.amazonaws.com/materials.spartacodingclub.kr/easygpt/default.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-        crossorigin="anonymous"></script>
-    <style>
-        .card {
-        transition: transform 0.3s ease-in-out; /* transform 변화를 부드럽게 처리 */
-        }
-
-        .card:hover {
-        transform: scale(1.05); /* 마우스를 올렸을 때 크기를 1.05배로 확대 */
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f3d5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="빌딩 매니저">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>빌딩 매니저 · 관리자 앱</title>
+<style>
+:root{--navy:#0f3d5e;--navy2:#1a5a87;--accent:#ff7a1a;--bg:#f3f5f8;--card:#fff;--ink:#1b2430;--sub:#5a6675;--line:#e2e6ec;--ok:#1e9e5a;--warn:#d99a00;--bad:#d3413b;--wait:#4a6cf7;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Nanum Gothic',sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0;background:none}
+.app{max-width:520px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:84px}
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:14px 16px 12px;display:flex;align-items:center;gap:10px;padding-top:calc(14px + env(safe-area-inset-top))}
+.top .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;font-weight:800;font-size:15px;flex:none}
+.top h1{font-size:16px;font-weight:700;flex:1;line-height:1.2;min-width:0}.top h1 small{display:block;font-size:11px;font-weight:500;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .who{font-size:11px;text-align:right;opacity:.95;max-width:110px}.top .who b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .bell,.top .out{background:rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:6px 8px;font-size:12px;position:relative;flex:none}
+.bell .bd{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border-radius:99px;font-size:10px;padding:1px 5px;font-weight:800}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;padding:9px 2px 8px;font-size:10.5px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav button .ic{font-size:19px;line-height:1}.nav button.on{color:var(--navy);font-weight:700}
+.page{padding:16px 16px 24px;display:none}.page.on{display:block}
+h2{font-size:19px;font-weight:800;margin-bottom:4px}h3{font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--navy)}
+.sub{color:var(--sub);font-size:13px}.mini{font-size:12px;color:var(--sub)}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 2px rgba(20,40,60,.06);margin-top:12px}.card.tight{padding:12px 14px}
+.row{display:flex;gap:10px;align-items:center}.row.between{justify-content:space-between}.wrap{flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--navy);color:#fff;border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px;width:100%}
+.btn.acc{background:var(--accent)}.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}.btn.sm{padding:7px 11px;font-size:12px;width:auto;border-radius:8px}
+.btn.ok{background:var(--ok)}.btn.bad{background:var(--bad)}.btn.gray{background:#8b95a3}.btn:disabled{opacity:.45;cursor:default}
+label.f{display:block;margin-top:12px;font-size:13px;font-weight:600;color:var(--sub)}label.f .req{color:var(--bad)}
+.in{width:100%;margin-top:5px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-size:15px}.in:focus{outline:none;border-color:var(--navy2)}textarea.in{min-height:90px;resize:vertical}
+.chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;background:#eef1f5;color:var(--sub);vertical-align:middle}
+.chip.wait{background:#e7ecff;color:var(--wait)}.chip.ok{background:#e3f6ea;color:var(--ok)}.chip.bad{background:#fde7e6;color:var(--bad)}.chip.draft{background:#fff3d6;color:#8a6200}.chip.acc{background:#ffe9d6;color:#b85600}
+.chip.sev낮음{background:#eef1f5}.chip.sev보통{background:#fff3d6;color:#8a6200}.chip.sev높음{background:#ffe3cc;color:#b85600}.chip.sev긴급{background:#fde7e6;color:var(--bad)}
+.list .it{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.list .it:last-child{border-bottom:0}
+.list .it .t{flex:1;min-width:0}.list .it .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.list .it .t small{color:var(--sub);font-size:12px}
+.kpi{background:var(--card);border-radius:var(--r);padding:14px 12px;box-shadow:0 1px 2px rgba(20,40,60,.06)}.kpi .n{font-size:24px;font-weight:800;color:var(--navy);line-height:1.1}.kpi .l{font-size:12px;color:var(--sub);margin-top:2px}.kpi.acc .n{color:var(--accent)}
+.bar{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12.5px}.bar .lbl{width:88px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--sub)}.bar .trk{flex:1;height:14px;background:#eef1f5;border-radius:7px;overflow:hidden;display:flex}.bar .trk i{display:block;height:100%}.bar .v{width:34px;text-align:right;font-weight:700}
+.legend{display:flex;gap:12px;font-size:11.5px;color:var(--sub);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;margin-top:12px;overflow-x:auto;padding-bottom:2px}.tabs button{padding:7px 13px;border-radius:99px;background:#fff;border:1.5px solid var(--line);font-size:13px;white-space:nowrap;color:var(--sub)}.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
+.empty{text-align:center;color:var(--sub);padding:28px 10px;font-size:13.5px}
+.notice{background:#fff8ee;border:1px solid #ffd9b3;border-radius:10px;padding:10px 12px;font-size:13px;color:#7a4a00;margin-top:10px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.role-grid button{background:#fff;border:2px solid var(--line);border-radius:14px;padding:16px 12px;text-align:left}.role-grid .ic{font-size:24px}.role-grid b{display:block;margin-top:6px;font-size:14.5px}.role-grid small{color:var(--sub);font-size:12px}
+.fieldrow{display:grid;grid-template-columns:1fr 92px 30px;gap:6px;margin-top:6px;align-items:center}.fieldrow .in{margin:0;padding:8px 10px;font-size:13px}.fieldrow .del{color:var(--bad);font-weight:800;font-size:18px;text-align:center}
+.check{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px}.check input{width:20px;height:20px}
+.tl{border-left:2px solid var(--line);margin-left:8px;padding-left:14px}.tl .e{position:relative;padding:4px 0 12px;font-size:13px}.tl .e:before{content:"";position:absolute;left:-20px;top:9px;width:10px;height:10px;border-radius:50%;background:#c7ced8}.tl .e.ok:before{background:var(--ok)}.tl .e.now:before{background:var(--wait);box-shadow:0 0 0 3px #e7ecff}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1b2430;color:#fff;padding:10px 16px;border-radius:99px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:50;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}.toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(10,20,30,.55);display:none;align-items:flex-end;justify-content:center;z-index:40}.modal.on{display:flex}
+.sheet{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px 28px}.sheet .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.sheet .hd h3{margin:0}.x{font-size:22px;color:var(--sub);padding:4px 8px}
+.pollbar{height:18px;background:#eef1f5;border-radius:9px;overflow:hidden;margin-top:3px}.pollbar i{display:block;height:100%;background:var(--navy2)}
+.day{font-size:12px;font-weight:800;color:var(--navy);margin-top:12px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.doc{background:#fff;color:#000;padding:22px 20px;border:1px solid var(--line);border-radius:6px;font-size:13px;line-height:1.55}
+.doc .dt{text-align:center;font-size:20px;font-weight:800;letter-spacing:4px;margin-bottom:12px}
+.doc table{width:100%;border-collapse:collapse;margin-top:10px}.doc th,.doc td{border:1px solid #333;padding:6px 8px;font-size:12.5px;vertical-align:top;text-align:left}.doc th{background:#f0f2f5;width:32%;font-weight:700}
+.doc .appr{display:flex;justify-content:flex-end}.doc .appr table{width:auto;margin:0}.doc .appr th{width:auto;text-align:center;font-size:11px;padding:3px 10px}.doc .appr td{height:52px;width:74px;text-align:center;font-size:11px;color:#333}
+.doc .body{white-space:pre-wrap;margin-top:12px;border:1px solid #333;padding:10px;min-height:80px}.doc .foot{margin-top:14px;font-size:11px;color:#555;display:flex;justify-content:space-between}.doc .stamp{color:var(--ok);font-weight:800}
+#printArea{display:none}
+@media print{body{background:#fff}.app>*:not(#printArea){display:none!important}#printArea{display:block!important}.doc{border:0;padding:0}.no-print{display:none!important}@page{size:A4;margin:16mm}}
+</style>
 </head>
-
 <body>
-    <div class="hero bg-dark text-center py-5 mb-4">
-        <h1 class="text-white">파이썬을 활용한</h1>
-        <h2 class="text-white"> ChatGPT 챗봇 만들기</h2>
-    </div>
-    <div class="container">
-        <!-- 중략 -->
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="xlsx2graph2.png" class="card-img-top" alt="설문조사 통계 막대그래프2.ipynb">
-                    <div class="card-body">
-                        <h5 class="card-title">설문조사 통계 막대그래프</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">2부</h6>
-                        <p class="card-text"></p>
-                        <a href="xlsx2graph2.png" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>               
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="xlsx2graph1.png" class="card-img-top" alt="설문조사 통계 막대그래프1.ipynb">
-                    <div class="card-body">
-                        <h5 class="card-title">구글 설문조사 결과 정리</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">1부</h6>
-                        <p class="card-text"></p>
-                        <a href="xlsx2graph1.png" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>            
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="SQL5w.png" class="card-img-top" alt="SQL로 시작하는 데이터 분석 첫걸음">
-                    <div class="card-body">
-                        <h5 class="card-title">[입문] SQL 데이터 분석 첫걸음</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">5주</h6>
-                        <p class="card-text">Day 13. 오리엔테이션 & 실무 문제풀이 소개 & 서비스 이해</p>
-                        <p class="card-text">Day 14. 날짜.시간별 분석</p>
-                        <p class="card-text">Day 15. 유저 세그먼트별 분석</p>
-                        <p class="card-text">Day 16. 프로덕트 분석 심화</p>
-                        <p class="card-text">Day 17. Hacker Rank 소개 & Aggregation</p>
-                        <a href="https://www.hackerrank.com/" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="SQL Cheat sheet_2.jpg" class="card-img-top" alt="SQL로 시작하는 데이터 분석 첫걸음">
-                    <div class="card-body">
-                        <h5 class="card-title">[입문] SQL 데이터 분석 첫걸음</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">4주</h6>
-                        <p class="card-text">Day 10. 조건에 조건 더하기</p>
-                        <p class="card-text">Day 11. 알아두면 좋은 고급 기능</p>
-                        <p class="card-text">Day 12. 강의 총정리 및 데이터 분석 로드맵 소개</p>
-                        <a href="https://olabi.github.io/gpt/SQL Cheat sheet_2.jpg" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="SQL Cheat sheet_1.jpg" class="card-img-top" alt="SQL로 시작하는 데이터 분석 첫걸음">
-                    <div class="card-body">
-                        <h5 class="card-title">[입문] SQL 데이터 분석 첫걸음</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">3주</h6>
-                        <p class="card-text">Day 07. 규칙 만들기</p>
-                        <p class="card-text">Day 08. 테이블 합치기</p>
-                        <p class="card-text">Day 09. 여러 테이블 한번에 다루기</p>
-                        <a href="https://olabi.github.io/gpt/SQL%20Cheat%20sheet_1.jpg" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="sql_order.png" class="card-img-top" alt="SQL로 시작하는 데이터 분석 첫걸음">
-                    <div class="card-body">
-                        <h5 class="card-title">[입문] SQL 데이터 분석 첫걸음</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">2주</h6>
-                        <p class="card-text">Day 03. 데이터 가져오기</p>
-                        <p class="card-text">Day 04. 조건에 맞는 데이터 가져오기</p>
-                        <p class="card-text">Day 05. 원하는 데이터 만들기</p>
-                        <p class="card-text">Day 06. 데이터 그룹화하기</p>
-                        <a href="https://drive.google.com/drive/folders/1GpJd0Q_MYuvQSNL2RgVSS4ZrKJu4_oVb?usp=share_link" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?mysql-data-study" class="card-img-top" alt="SQL 데이터 분석 첫걸음">
-                    <div class="card-body">
-                        <h5 class="card-title">[입문] SQL 데이터 분석 첫걸음</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">1주</h6>
-                        <p class="card-text">Day 01. 오리엔테이션</p>
-                        <p class="card-text">Day 02. 데이터베이스 다루기</p>
-                        <p class="card-text">* 실습 환경 구축: MySQLWorkbench 설치</p>
-                        <a href="https://drive.google.com/drive/folders/1GpJd0Q_MYuvQSNL2RgVSS4ZrKJu4_oVb?usp=share_link" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <a href="https://pf.kakao.com/_FdNHxj" target="_blank">
-                        <img src="photo-1682391391136-56f4bd75a5a6.jpeg" class="card-img-top" alt="source.unsplash.com/1600x900/?kakaotalk-AI-ChatGPT">
-                    </a>
-                    <div class="card-body">
-                        <a href="http://pf.kakao.com/_RxoCkxj" target="_blank">
-                            <h5 class="card-title">카카오톡으로 ChatGPT와 채팅</h5>
-                        </a>
-                        <a href="https://woensug-choi.github.io/ChatGee/" target="_blank">
-                            <p class="card-text">챗봇빌더 사용</p>
-                        </a>
-                        <a href="https://chatbot.kakao.com" target="_blank">
-                            <p class="card-text">카카오톡 채널 설정</p>
-                        </a>
-                        <a href="https://platform.openai.com/account/api-keys" target="_blank">
-                            <p class="card-text">ChatGPT API Key</p>
-                        </a>
-                    </div>
-                </div>
-            </div>            
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?kakaotalk-message-token" class="card-img-top" alt="나에게 카카오톡 메시지 보내기">
-                    <div class="card-body">
-                        <h5 class="card-title">나에게 카카오톡 메시지 보내기</h5>
-                        <p class="card-text">카카오톡 메시지 API 사용 권한받기</p>
-                        <p class="card-text">인증 코드와 사용자 토큰 발급</p>
-                        <p class="card-text">리스트 메시지 템플릿 사용하여 카카오톡 보내기</p>
-                        <a href="https://youtu.be/uZOd4hh9CZw" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>            
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?kakaotalk-openapi-bromide" class="card-img-top" alt="연예인 사진 모으기">
-                    <div class="card-body">
-                        <h5 class="card-title">연예인 사진 모으기</h5>
-                        <p class="card-text">카카오 개발자 사이트</p>
-                        <p class="card-text">이미지 검색 OpenAPI</p>
-                        <p class="card-text">웹에 있는 이미지 파일을 저장하는 방법</p>
-                        <a href="https://youtu.be/IkGw1jtrpPU" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?buy-sell-volatility" class="card-img-top" alt="넥스트레벨 파이썬 매매전략">
-                    <div class="card-body">
-                        <h5 class="card-title">넥스트레벨 파이썬 매매전략</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">파이썬 백테스팅 2</h6>
-                        <p class="card-text">변동성 돌파 전략을 구현</p>
-                        <p class="card-text">월요일에 사서, 금요일에 팔면 적합한 최적화 종목 찾기</p>
-                        <p class="card-text">나만의 전략 구축</p>
-                        <a href="https://teamsparta.notion.site/5-2-6ca0ad56c94e49869265ba5eb45d775c" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?moving-average-backtesting" class="card-img-top" alt="내가 선택한 전략, 맞았을까?">
-                    <div class="card-body">
-                        <h5 class="card-title">내가 선택한 전략, 맞았을까?</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">파이썬 백테스팅 1</h6>
-                        <p class="card-text">백테스팅 기초 학습</p>
-                        <p class="card-text">pandas, numpy, matplotlib 라이브러리 학습</p>
-                        <p class="card-text">백테스팅을 위한 데이터 수집 및 분석 코드 스니펫 예시</p>
-                        <a href="https://teamsparta.notion.site/4-1-afef2df44fe24ea0a5c9728558fad38b" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?dart-open-api" class="card-img-top" alt="DART-Open API 다루기, 그래프 그리기">
-                    <div class="card-body">
-                        <h5 class="card-title">DART-Open API 다루기, 그래프 그리기</h5>
-                        <p class="card-text">DART-Open API 학습</p>
-                        <p class="card-text">requests, xmltodict, pandas 라이브러리 학습</p>
-                        <p class="card-text">DART-Open API를 활용한 데이터 수집 및 분석 코드 스니펫 예시</p>
-                        <a href="https://teamsparta.notion.site/3-DART-DART-Open-API-1921af8ae77147e185879b9db1e8b9b4" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>            
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?stock-data" class="card-img-top" alt="데이터분석기초, 해외주식 다루기">
-                    <div class="card-body">
-                        <h5 class="card-title">데이터분석기초, 해외주식 다루기</h5>
-                        <p class="card-text">데이터 분석 기초 학습 (ex. 데이터 전처리, 시각화)</p>
-                        <p class="card-text">pandas, numpy, matplotlib 라이브러리 학습</p>
-                        <p class="card-text">해외주식 데이터 수집 및 분석 코드 스니펫 예시</p>
-                        <a href="https://teamsparta.notion.site/2-ec5d47841d1245dca66ec17a28fbcee6" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?business-automation" class="card-img-top" alt="파이썬기초, 업무자동화">
-                    <div class="card-body">
-                        <h5 class="card-title">파이썬기초, 업무자동화</h5>
-                        <p class="card-text">파이썬 기초 문법 학습</p>
-                        <p class="card-text">업무 자동화를 위한 라이브러리 학습 (ex. openpyxl, pandas)</p>
-                        <p class="card-text">파이썬을 활용한 업무 자동화 코드 스니펫 예시</p>
-                        <a href="https://teamsparta.notion.site/1-71164ea191994107ba1e0c73b29b0b5c" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>            
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="https://source.unsplash.com/1600x900/?chatgpt-web-site" class="card-img-top" alt="chatGPT로 10분만에 웹사이트 만들기">
-                    <div class="card-body">
-                        <h5 class="card-title">chatGPT로 10분만에 웹사이트 만들기</h5>
-                        <p class="card-text">HTML, CSS 기초</p>
-                        <p class="card-text">GPT에 명령 내리기</p>
-                        <p class="card-text">github에 배포, 홈페이지 링크 공유하기</p>
-                        <a href="https://teamsparta.notion.site/chatGPT-10-51e68f4c499941bfa246c477011a3e64" class="card-link stretched-link" target="_blank"></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="app" id="app">
 
+<!-- ===== 로그인 ===== -->
+<div id="login" style="padding:26px 20px 40px">
+  <div style="display:flex;align-items:center;gap:12px;margin-top:20px">
+    <div style="width:52px;height:52px;border-radius:14px;background:var(--navy);display:grid;place-items:center;color:#fff;font-weight:900;font-size:20px">BM</div>
+    <div><div style="font-size:24px;font-weight:900;color:var(--navy)" id="loginCompany">빌딩 매니저</div><div class="sub">관리자 앱 · 본사 · 사업장 · 갑사 담당자</div></div>
+  </div>
+  <div class="card" style="margin-top:22px">
+    <label class="f">사용자 선택 (데모 — 운영 시 ID/PIN 로그인으로 교체)</label>
+    <select class="in" id="loginUser"></select>
+    <button class="btn" style="margin-top:14px" onclick="doLogin()">접속</button>
+    <button class="btn ghost" style="margin-top:8px" onclick="openSignup()">사용 신청 (관리자 승인 필요)</button>
+    <div class="mini" style="margin-top:10px">☆ 모든 사용자는 전산관리자의 <b>사용권한 승인</b> 후 접속할 수 있으며, 사업장 계약이 종료되면 권한이 자동 해제됩니다.</div>
+  </div>
+  <div class="card tight">
+    <div class="row between"><b style="font-size:14px">데이터 저장소</b><span class="chip" id="dbBadge">로컬(브라우저)</span></div>
+    <div class="mini" style="margin-top:6px">전산관리자 › 시스템에서 Apps Script URL을 입력하면 <b>비공개 Google 스프레드시트</b>를 DB로 사용합니다.</div>
+  </div>
+  <div class="card tight" id="installCard">
+    <div class="row between"><b style="font-size:14px">📲 앱 모드로 연결</b><button class="btn sm acc" id="installBtn" style="display:none" onclick="installApp()">앱으로 설치</button></div>
+    <div class="mini" style="margin-top:6px" id="installHint">현장에서는 웹으로 접속한 뒤 <b>홈 화면에 추가</b>하면 앱처럼 실행됩니다. (iPhone: 공유 → 홈 화면에 추가 / Android: 메뉴 → 앱 설치)</div>
+  </div>
+  <div class="role-grid">
+    <button onclick="quickLogin('ceo')"><span class="ic">📊</span><b>대표</b><small>전 사업장 경영정보</small></button>
+    <button onclick="quickLogin('operator')"><span class="ic">🏢</span><b>운영자(본사)</b><small>일일·이슈 보고 수신, 지시</small></button>
+    <button onclick="quickLogin('manager')"><span class="ic">🏠</span><b>관리소장</b><small>결재 · 안내앱 공지/투표</small></button>
+    <button onclick="quickLogin('staff')"><span class="ic">🛠️</span><b>실무자(팀장)</b><small>양식 입력 → PDF 보고</small></button>
+    <button onclick="quickLogin('client')"><span class="ic">🤝</span><b>갑사 담당자</b><small>계약사 PM · 운영현황 공유</small></button>
+    <button onclick="quickLogin('admin')"><span class="ic">⚙️</span><b>전산관리자</b><small>권한 승인 · 양식 · 회사 CMS</small></button>
+  </div>
+  <div class="mini" style="text-align:center;margin-top:20px">입주민·입주사용 <b>안내앱</b>은 <a href="resident.html">resident.html</a> 입니다.</div>
+</div>
+
+<!-- ===== 메인 ===== -->
+<div id="main" style="display:none">
+  <header class="top">
+    <div class="logo">BM</div>
+    <h1 id="hdTitle">빌딩 매니저<small id="hdCompany"></small></h1>
+    <div class="who"><b id="hdUser"></b><span id="hdRole"></span></div>
+    <button class="bell" onclick="openBell()" title="알림">🔔<span class="bd" id="bellCnt" style="display:none">0</span></button>
+    <button class="out" onclick="logout()">나가기</button>
+  </header>
+
+  <section class="page" id="p-dash">
+    <h2>경영 대시보드</h2><div class="sub" id="dashSub"></div>
+    <div class="tabs" id="dashPeriod"><button class="on" data-p="month">이번 달</button><button data-p="week">이번 주</button><button data-p="all">전체</button></div>
+    <div class="grid2" style="margin-top:12px" id="dashKpi"></div>
+    <div class="card"><div class="row between"><b>🚨 미해결 이슈</b><span class="chip bad" id="issueCnt">0</span></div><div class="list" id="dashIssues"></div></div>
+    <div class="card"><b>📅 향후 7일 중요업무일정</b><div class="list" id="dashEvents"></div></div>
+    <div class="card"><b>사업장별 보고 현황</b><div class="mini">승인/결재중/반려</div><div id="dashSites"></div><div class="legend"><span><i style="background:var(--ok)"></i>승인</span><span><i style="background:var(--wait)"></i>결재중</span><span><i style="background:var(--bad)"></i>반려</span></div></div>
+    <div class="card"><b>양식별 통계항목 합계</b><div class="mini">전산관리자가 "통계"로 지정한 숫자 필드 자동 집계</div><div id="dashStats"></div></div>
+    <div class="card"><b>양식별 제출 건수</b><div id="dashForms"></div></div>
+    <div class="card"><div class="row between"><b>대표 결재 대기</b><span class="chip wait" id="ceoWaitCnt">0</span></div><div class="list" id="ceoWaitList"></div></div>
+    <div class="card"><b>최근 지시사항</b><div class="list" id="dashDirectives"></div></div>
+  </section>
+
+  <section class="page" id="p-sites"><h2>사업장 운영현황</h2><div class="sub">사업부 관할 전 사업장 · 실시간</div><div id="siteCards"></div></section>
+
+  <section class="page" id="p-reports">
+    <div class="row between"><h2>보고서</h2><button class="btn acc sm" id="btnNew" onclick="openNewReport()">＋ 새 보고서</button></div>
+    <div class="tabs" id="repTabs"><button class="on" data-f="all">전체</button><button data-f="mine">내 결재 대기</button><button data-f="issue">이슈</button><button data-f="daily">일일보고</button><button data-f="draft">임시저장</button><button data-f="approved">승인</button><button data-f="rejected">반려</button></div>
+    <div class="card list" id="repList"></div>
+  </section>
+
+  <section class="page" id="p-schedule">
+    <h2>중요업무일정</h2><div class="sub">사업장별 주요 일정 · 본사·갑사와 실시간 공유</div>
+    <div class="card" id="evNew">
+      <div class="grid2"><div><label class="f">일자</label><input class="in" type="date" id="ev_date"></div><div><label class="f">사업장</label><select class="in" id="ev_site"></select></div></div>
+      <label class="f">일정</label><input class="in" id="ev_title" placeholder="예) 승강기 정기검사(한국승강기안전공단)">
+      <div class="check"><input type="checkbox" id="ev_imp"><label for="ev_imp">중요 일정 (대표 대시보드 표시)</label></div>
+      <button class="btn" style="margin-top:12px" onclick="addEvent()">일정 등록</button>
+    </div>
+    <div class="tabs" id="evTabs"><button class="on" data-s="">전체 사업장</button></div>
+    <div class="card" id="evList"></div>
+  </section>
+
+  <section class="page" id="p-directives">
+    <h2 id="dirTitle">지시 · 소통</h2><div class="sub" id="dirSub">본사/사업부 ↔ 사업장 실시간 지시사항</div>
+    <div class="card" id="dirNew">
+      <label class="f">대상 사업장</label><select class="in" id="dirSite"></select>
+      <label class="f" id="dirLabel">지시 내용</label><textarea class="in" id="dirText" placeholder="예) 3층 공조기 필터 교체 후 점검결과서 오늘 중 제출"></textarea>
+      <button class="btn" style="margin-top:12px" onclick="sendDirective()" id="dirBtn">지시 전송</button>
+    </div>
+    <div class="card list" id="dirList"></div>
+  </section>
+
+  <section class="page" id="p-announce">
+    <h2>안내앱 관리</h2><div class="sub">입주민·입주사 안내앱(resident.html)에 공지·투표·관리비 게시 및 알림 공고</div>
+    <select class="in" id="anSite" onchange="announceSite=this.value;renderAnnounce()"></select>
+    <div class="tabs" id="anTabs"><button class="on" data-t="notice">공지</button><button data-t="poll">투표</button><button data-t="resident">입주민 승인</button><button data-t="req">민원접수</button><button data-t="fee">관리비</button><button data-t="board">게시판</button></div>
+    <div id="anBody"></div>
+  </section>
+
+  <section class="page" id="p-admin">
+    <h2>전산관리자 CMS</h2><div class="sub">회사·사업장·사용자 권한·양식을 코드 없이 설정</div>
+    <div class="tabs" id="admTabs"><button class="on" data-t="users">사용자·권한</button><button data-t="sites">사업장</button><button data-t="forms">양식</button><button data-t="company">회사</button><button data-t="system">시스템</button></div>
+    <div id="admBody"></div>
+  </section>
+
+  <nav class="nav" id="nav"></nav>
+</div>
+
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* =====================================================================
+   빌딩 매니저 v2 — 관리자 앱 (대표·운영자·관리소장·실무자·갑사·전산관리자)
+   저장소: localStorage(기본) 또는 Google Apps Script(비공개 스프레드시트)
+   ===================================================================== */
+const LS_KEY='bm.v2';
+const today=()=>new Date().toISOString().slice(0,10);
+const now=()=>{const d=new Date();return d.toISOString().slice(0,10)+' '+d.toTimeString().slice(0,5);};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fmt=n=>Number(n||0).toLocaleString('ko-KR');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const addDays=n=>{const x=new Date();x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);};
+
+/* ---------- 데모 데이터 ---------- */
+function seed(){
+  const d=today(), m=d.slice(0,7);
+  const sites=[
+    {id:'s1',name:'센트럴타워',client:'㈜센트럴자산운용',pm:'김PM',contractEnd:'2027-03-31',type:'오피스',accessCode:'CT-2026',announce:true},
+    {id:'s2',name:'한빛아파트',client:'한빛아파트 입주자대표회의',pm:'박관리',contractEnd:'2026-12-31',type:'공동주택',accessCode:'HB-2026',announce:true},
+    {id:'s3',name:'그린몰',client:'그린리테일㈜',pm:'이PM',contractEnd:addDays(25),type:'상업시설',accessCode:'GM-2026',announce:false},
+    {id:'s4',name:'리버뷰빌딩(계약종료)',client:'리버뷰자산㈜',pm:'-',contractEnd:'2026-06-30',type:'오피스',accessCode:'RV-2025',announce:false}
+  ];
+  const users=[
+    {id:'u1',name:'대표님',role:'ceo',site:'',title:'대표이사',status:'approved'},
+    {id:'u2',name:'정사업부장',role:'operator',site:'',title:'사업부장',status:'approved'},
+    {id:'u3',name:'최소장',role:'manager',site:'s1',title:'관리소장',status:'approved'},
+    {id:'u4',name:'강팀장',role:'staff',site:'s1',title:'기계팀장',status:'approved'},
+    {id:'u5',name:'윤팀장',role:'staff',site:'s2',title:'전기팀장(전기안전관리자)',status:'approved'},
+    {id:'u6',name:'오소장',role:'manager',site:'s2',title:'관리소장',status:'approved'},
+    {id:'u7',name:'전산관리자',role:'admin',site:'',title:'전산관리자',status:'approved'},
+    {id:'u8',name:'서팀장',role:'staff',site:'s3',title:'시설팀장',status:'approved'},
+    {id:'u9',name:'김PM',role:'client',site:'s1',title:'㈜센트럴자산운용 PM',status:'approved'},
+    {id:'u10',name:'한신입',role:'staff',site:'s2',title:'미화팀장',status:'pending',phone:'010-1234-5678',requestedAt:d},
+    {id:'u11',name:'조소장',role:'manager',site:'s4',title:'관리소장',status:'approved'}
+  ];
+  const forms=[
+    {id:'f5',name:'일일보고',cat:'일보',line:['manager','operator'],
+     fields:[{k:'근무인원',t:'number',kpi:1,req:1},{k:'금일 주요업무',t:'textarea',req:1},{k:'중요업무일정(향후)',t:'textarea'},{k:'민원접수(건)',t:'number',kpi:1},{k:'특이사항',t:'textarea'}],
+     template:'■ 근무인원: {{근무인원}}명\n\n■ 금일 주요업무\n{{금일 주요업무}}\n\n■ 중요업무일정(향후)\n{{중요업무일정(향후)}}\n\n■ 민원접수: {{민원접수(건)}}건\n■ 특이사항: {{특이사항}}'},
+    {id:'f6',name:'이슈사항 보고',cat:'이슈',line:['manager','operator','ceo'],
+     fields:[{k:'이슈구분',t:'select',opt:'안전사고|설비고장|민원/분쟁|계약/비용|기타'},{k:'심각도',t:'select',opt:'낮음|보통|높음|긴급'},{k:'이슈내용',t:'textarea',req:1},{k:'조치계획',t:'textarea',req:1},{k:'완료예정일',t:'date'},{k:'조치완료',t:'check'}],
+     template:'■ 이슈구분: {{이슈구분}} / 심각도: {{심각도}}\n\n■ 이슈내용\n{{이슈내용}}\n\n■ 조치계획\n{{조치계획}}\n\n■ 완료예정일: {{완료예정일}} / 조치완료: {{조치완료}}'},
+    {id:'f1',name:'설비 점검결과서',cat:'점검',line:['manager','operator','ceo'],
+     fields:[{k:'설비명',t:'text',req:1},{k:'점검구분',t:'select',opt:'일상|주간|월간|법정'},{k:'점검항목수',t:'number',kpi:1},{k:'이상항목수',t:'number',kpi:1},{k:'조치내용',t:'textarea'},{k:'조치완료',t:'check'},{k:'점검사진/첨부',t:'file'}],
+     template:'상기 설비에 대하여 {{점검구분}} 점검을 실시한 결과, 총 {{점검항목수}}개 항목 중 {{이상항목수}}건의 이상이 확인되었으며 다음과 같이 조치하였습니다.\n\n■ 조치내용\n{{조치내용}}\n\n■ 조치완료 여부: {{조치완료}}'},
+    {id:'f2',name:'작업일보',cat:'일보',line:['manager','operator'],
+     fields:[{k:'작업구분',t:'select',opt:'정기작업|긴급작업|민원처리|외주공사'},{k:'작업내용',t:'textarea',req:1},{k:'투입인원',t:'number',kpi:1},{k:'작업시간(h)',t:'number',kpi:1},{k:'특이사항',t:'textarea'}],
+     template:'금일 {{작업구분}}으로 아래 작업을 수행하였습니다.\n\n■ 작업내용\n{{작업내용}}\n\n■ 투입인원 {{투입인원}}명 / 작업시간 {{작업시간(h)}}시간\n■ 특이사항: {{특이사항}}'},
+    {id:'f3',name:'구매(자재) 요청서',cat:'구매',line:['manager','operator','ceo'],
+     fields:[{k:'품명',t:'text',req:1},{k:'규격',t:'text'},{k:'수량',t:'number'},{k:'예상금액(원)',t:'number',kpi:1,req:1},{k:'구매사유',t:'textarea',req:1},{k:'긴급여부',t:'check'},{k:'견적서(PDF)',t:'file'}],
+     template:'아래와 같이 자재 구매를 요청합니다.\n\n■ 품명/규격: {{품명}} / {{규격}}\n■ 수량: {{수량}}\n■ 예상금액: {{예상금액(원)}}원\n■ 구매사유\n{{구매사유}}\n■ 긴급여부: {{긴급여부}}'},
+    {id:'f4',name:'민원 처리 보고서',cat:'민원',line:['manager','operator'],
+     fields:[{k:'접수경로',t:'select',opt:'전화|방문|안내앱|이메일'},{k:'민원내용',t:'textarea',req:1},{k:'처리결과',t:'textarea',req:1},{k:'처리소요(일)',t:'number',kpi:1}],
+     template:'■ 접수경로: {{접수경로}}\n■ 민원내용\n{{민원내용}}\n\n■ 처리결과\n{{처리결과}}\n\n■ 처리소요: {{처리소요(일)}}일'},
+    {id:'f7',name:'서식 PDF 제출',cat:'서식',line:['manager','operator'],
+     fields:[{k:'서식명',t:'text',req:1},{k:'첨부파일(PDF)',t:'file',req:1},{k:'요약/비고',t:'textarea'}],
+     template:'첨부한 「{{서식명}}」 서식을 제출합니다.\n\n■ 요약/비고\n{{요약/비고}}'}
+  ];
+  function mk(id,form,site,author,date,vals,status,approvedBy,reason,extra){
+    const f=forms.find(x=>x.id===form);const hist=[{at:date+' 09:10',by:author,act:'제출'}];
+    approvedBy.forEach((u,i)=>hist.push({at:date+' '+(10+i)+':30',by:u,act:'승인'}));
+    if(status==='rejected')hist.push({at:date+' 11:00',by:'u2',act:'반려',memo:reason});
+    const first=f.fields.find(x=>x.t==='text'||x.t==='textarea');
+    return Object.assign({id,form,site,author,date,vals,status,step:approvedBy.length,hist,title:f.name+' - '+String(vals[first.k]||'').slice(0,18)},extra||{});
+  }
+  const reports=[
+    mk('r1','f1','s1','u4',m+'-02',{설비명:'냉각탑 #1',점검구분:'월간',점검항목수:24,이상항목수:1,조치내용:'벨트 장력 조정',조치완료:true},'approved',['u3','u2','u1']),
+    mk('r2','f2','s1','u4',m+'-03',{작업구분:'정기작업',작업내용:'지하2층 배수펌프 청소',투입인원:2,'작업시간(h)':3,특이사항:'없음'},'approved',['u3','u2']),
+    mk('r3','f3','s2','u5',m+'-04',{품명:'LED 등기구',규격:'40W 1200mm',수량:30,'예상금액(원)':690000,구매사유:'지하주차장 소등 12개소 교체',긴급여부:false},'pending',['u6']),
+    mk('r4','f4','s2','u5',m+'-04',{접수경로:'전화',민원내용:'304동 승강기 소음',처리결과:'유지보수업체 점검 완료, 가이드롤러 교체','처리소요(일)':1},'approved',['u6','u2']),
+    mk('r5','f1','s3','u8',m+'-05',{설비명:'수변전설비',점검구분:'법정',점검항목수:40,이상항목수:3,조치내용:'MCCB 단자 조임, 절연저항 재측정',조치완료:false},'rejected',[],'조치완료 후 재제출 바람'),
+    mk('r6','f2','s3','u8',m+'-05',{작업구분:'민원처리',작업내용:'2층 화장실 누수 보수',투입인원:1,'작업시간(h)':2,특이사항:'배관 노후'},'pending',['u2']),
+    mk('r7','f3','s1','u4',m+'-06',{품명:'공조기 필터',규격:'MERV 13',수량:40,'예상금액(원)':1200000,구매사유:'분기 교체 주기 도래',긴급여부:false},'pending',['u3','u2']),
+    mk('r8','f5','s2','u6',addDays(-1),{근무인원:7,'금일 주요업무':'정기 소방점검 사전준비, 지하주차장 조명 점검, 304동 승강기 소음 민원 처리','중요업무일정(향후)':'9/12 소방시설 종합점검(전 세대)','민원접수(건)':2,특이사항:'없음'},'approved',['u6','u2'],null,{published:true}),
+    mk('r9','f6','s1','u4',d,{이슈구분:'설비고장',심각도:'높음',이슈내용:'냉각탑 #2 팬 모터 과열(베어링 소음) — 냉방 부하 시 정지 위험',조치계획:'모터 교체 견적 2개사 접수 중, 교체 전까지 #1 단독 운전',완료예정일:addDays(5),조치완료:false},'pending',['u3']),
+    mk('r10','f5','s1','u3',d,{근무인원:9,'금일 주요업무':'냉각탑 #2 모터 과열 점검, 월간 공조기 필터 점검, 12층 입주사 조명 민원','중요업무일정(향후)':addDays(2)+' 소방시설 종합정밀점검 / '+addDays(10)+' 계약사 월간 운영보고','민원접수(건)':1,특이사항:'냉각탑 이슈 별도 보고'},'pending',[])
+  ];
+  return {
+    company:{name:'현대관리시스템즈',brand:'빌딩 매니저',ceoTitle:'대표이사',division:'FM사업부',footer:'본 문서는 빌딩 매니저에서 전자결재로 생성되었습니다.'},
+    roleNames:{ceo:'대표',operator:'운영자(본사)',manager:'관리소장',staff:'실무자(팀장)',client:'갑사 담당자',admin:'전산관리자'},
+    sites,users,forms,reports,
+    directives:[
+      {id:'d1',site:'s3',by:'u2',at:d+' 08:40',text:'수변전설비 지적사항 조치 후 점검결과서 재제출 요청',done:false},
+      {id:'d2',site:'s1',by:'u1',at:d+' 09:15',text:'냉각탑 가동 전 수질검사 결과 첨부 부탁',done:true},
+      {id:'d3',site:'s1',by:'u9',at:d+' 10:05',text:'[갑사 요청] 12층 입주사 조명 깜빡임 — 오늘 중 확인 부탁드립니다',done:false}
+    ],
+    events:[
+      {id:'e1',site:'s1',date:addDays(2),title:'소방시설 종합정밀점검(외부업체)',imp:1,by:'u3'},
+      {id:'e2',site:'s2',date:addDays(4),title:'승강기 정기검사(한국승강기안전공단)',imp:1,by:'u6'},
+      {id:'e3',site:'s2',date:addDays(6),title:'지하주차장 LED 교체 공사 착수',imp:0,by:'u5'},
+      {id:'e4',site:'s1',date:addDays(10),title:'계약사 월간 운영보고 회의',imp:1,by:'u2'},
+      {id:'e5',site:'s3',date:addDays(1),title:'수변전설비 재점검(법정)',imp:1,by:'u8'}
+    ],
+    notices:[
+      {id:'n1',site:'s2',at:d+' 09:00',title:'9월 정기 소방시설 종합점검 안내',body:'9/12(금) 10:00~16:00 전 세대 소방점검이 진행됩니다. 세대 내 감지기 점검을 위해 재실 협조 부탁드립니다.',imp:true,by:'u6'},
+      {id:'n2',site:'s2',at:addDays(-1)+' 17:30',title:'[업무보고] 일일보고 '+addDays(-1),body:'■ 근무인원: 7명\n■ 금일 주요업무: 정기 소방점검 사전준비, 지하주차장 조명 점검, 304동 승강기 소음 민원 처리',imp:false,by:'u6',type:'report',reportId:'r8'},
+      {id:'n3',site:'s1',at:d+' 08:30',title:'정기 전기설비 정전 작업 안내',body:addDays(8)+'(토) 08:00~12:00 수변전설비 법정점검으로 전층 정전이 예정되어 있습니다. 서버·냉장 설비 사전 조치 바랍니다.',imp:true,by:'u3'}
+    ],
+    polls:[{id:'p1',site:'s2',title:'지하주차장 LED 교체 공사 시행 찬반',desc:'총 예산 690만원 · 장기수선충당금 집행',options:['찬성','반대','기권'],closes:addDays(7),votes:{rs1:0},status:'open',by:'u6'}],
+    residents:[
+      {id:'rs1',site:'s2',unit:'304동 1203호',name:'홍길동',phone:'010-0000-0001',pin:'1234',status:'approved'},
+      {id:'rs2',site:'s2',unit:'301동 502호',name:'김영희',phone:'',pin:'1234',status:'approved'},
+      {id:'rs3',site:'s2',unit:'305동 101호',name:'박신청',phone:'010-0000-0003',pin:'1234',status:'pending',requestedAt:d},
+      {id:'rs4',site:'s1',unit:'12층 ㈜알파',name:'알파 총무팀',phone:'',pin:'1234',status:'approved'}
+    ],
+    fees:[
+      {site:'s2',month:m,unit:'304동 1203호',due:m+'-25',items:[['일반관리비',52000],['청소비',18000],['경비비',33000],['승강기유지비',6500],['전기료(세대)',41200],['수도료',12800],['장기수선충당금',21000]]},
+      {site:'s2',month:m,unit:'301동 502호',due:m+'-25',items:[['일반관리비',48000],['청소비',16000],['경비비',30000],['승강기유지비',6500],['전기료(세대)',36900],['수도료',9800],['장기수선충당금',19000]]},
+      {site:'s1',month:m,unit:'12층 ㈜알파',due:m+'-25',items:[['관리비',1850000],['전기료',920000],['수도료',85000]]}
+    ],
+    board:[
+      {id:'b1',site:'s2',at:d,cat:'점검일정',title:'9월 설비 점검 일정표',body:'승강기 정기점검 9/15, 급수펌프 점검 9/18, 정화조 청소 9/22'},
+      {id:'b2',site:'s2',at:d,cat:'업무안내',title:'관리사무소 운영시간 및 연락처',body:'평일 09:00~18:00 / 야간·주말 당직 032-000-0000'}
+    ],
+    reqs:[{id:'q1',site:'s2',at:d+' 08:30',unit:'304동 1203호',residentId:'rs1',body:'복도 3층 센서등 고장',done:false}],
+    settings:{gasUrl:'',gasKey:''}
+  };
+}
+
+/* ---------- 데이터 계층 ---------- */
+const DB={
+  data:null,
+  load(){const raw=localStorage.getItem(LS_KEY);this.data=raw?JSON.parse(raw):seed();if(!raw)this.save(false);['events','notices','polls','residents','fees','board','reqs'].forEach(k=>this.data[k]=this.data[k]||[]);return this.data;},
+  save(sync=true){localStorage.setItem(LS_KEY,JSON.stringify(this.data));if(sync)this.push();},
+  async gas(action,payload){const {gasUrl,gasKey}=this.data.settings;const r=await fetch(gasUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({key:gasKey,action},payload||{}))});return r.json();},
+  stripFiles(d){const c=JSON.parse(JSON.stringify(d));delete c.settings;(c.reports||[]).forEach(r=>Object.values(r.vals||{}).forEach(v=>{if(v&&typeof v==='object'&&v.data){delete v.data;v.localOnly=true;}}));return c;},
+  async push(){if(!this.data.settings.gasUrl)return;try{const j=await this.gas('saveAll',{data:this.stripFiles(this.data)});if(!j.ok)toast('시트 저장 실패: '+(j.error||''));}catch(e){toast('시트 동기화 실패 (오프라인?)');}},
+  async pull(){if(!this.data.settings.gasUrl)return false;try{const j=await this.gas('loadAll');if(j&&j.ok&&j.data){j.data.settings=this.data.settings;this.data=j.data;['events','notices','polls','residents','fees','board','reqs'].forEach(k=>this.data[k]=this.data[k]||[]);this.save(false);return true;}}catch(e){toast('시트 불러오기 실패');}return false;},
+  async upload(file){const j=await this.gas('uploadFile',{name:file.name,mime:file.type,data:file.data.split(',')[1]});if(!j.ok)throw new Error(j.error||'upload');return j.url;},
+  reset(){localStorage.removeItem(LS_KEY);this.load();}
+};
+let S=DB.load(), me=null, curPage='', repFilter='all', dashPeriod='month', admTab='users', anTab='notice', announceSite='', evSiteFilter='', filterSite='';
+
+/* ---------- 공통 ---------- */
+const site=id=>S.sites.find(s=>s.id===id)||{name:'(본사)',id:''};
+const user=id=>S.users.find(u=>u.id===id)||{name:'?'};
+const form=id=>S.forms.find(f=>f.id===id);
+const roleName=r=>S.roleNames[r]||r;
+const catIcon=c=>({점검:'🔍',일보:'📝',구매:'🛒',민원:'📞',이슈:'🚨',서식:'📎',안전:'🦺'}[c]||'📄');
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2400);}
+function openSheet(html){document.getElementById('sheet').innerHTML=html;document.getElementById('modal').classList.add('on');}
+function closeSheet(){document.getElementById('modal').classList.remove('on');}
+const modalOpen=()=>document.getElementById('modal').classList.contains('on');
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSheet();});
+function statusChip(r){return {pending:'<span class="chip wait">결재중</span>',approved:'<span class="chip ok">승인</span>',rejected:'<span class="chip bad">반려</span>',draft:'<span class="chip draft">임시저장</span>'}[r.status];}
+function inPeriod(ds){if(dashPeriod==='all')return true;const d=new Date(ds),n=new Date();if(dashPeriod==='month')return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();const w=new Date(n);w.setDate(n.getDate()-6);return d>=w;}
+function siteExpired(sid){const s=S.sites.find(x=>x.id===sid);return !!(s&&s.contractEnd&&s.contractEnd<today());}
+function approvalsOf(r){const i=r.hist.map(h=>h.act).lastIndexOf('제출');return r.hist.slice(i<0?0:i).filter(h=>h.act==='승인');}
+function nextApproverRole(r){const f=form(r.form);return f?f.line[r.step]:null;}
+function canApprove(r,u){if(r.status!=='pending')return false;const role=nextApproverRole(r);if(!role||u.role!==role)return false;if(role==='manager'&&u.site!==r.site)return false;return true;}
+function visibleReports(u){if(['ceo','operator','admin'].includes(u.role))return S.reports;if(u.role==='manager')return S.reports.filter(r=>r.site===u.site);if(u.role==='client')return S.reports.filter(r=>r.site===u.site&&r.status!=='draft');return S.reports.filter(r=>r.site===u.site&&(r.author===u.id||r.status!=='draft'));}
+const isOpenIssue=r=>form(r.form)?.cat==='이슈'&&!r.vals['조치완료']&&r.status!=='rejected';
+const mySites=()=>['ceo','operator','admin'].includes(me.role)?S.sites:S.sites.filter(s=>s.id===me.site);
+const canManageAnnounce=()=>['manager','operator','admin'].includes(me.role);
+function myTodo(){if(!me)return[];const a=S.reports.filter(r=>canApprove(r,me)).map(r=>({t:'결재 대기: '+r.title,f:()=>openReport(r.id)}));
+  if(['staff','manager'].includes(me.role))S.directives.filter(d=>d.site===me.site&&!d.done).forEach(d=>a.push({t:'미완료 지시: '+d.text.slice(0,30),f:()=>go('directives')}));
+  if(canManageAnnounce())S.residents.filter(r=>r.status==='pending'&&(me.role!=='manager'||r.site===me.site)).forEach(r=>a.push({t:'입주민 승인 대기: '+r.unit+' '+r.name,f:()=>{announceSite=r.site;anTab='resident';go('announce');}}));
+  if(me.role==='admin')S.users.filter(u=>u.status==='pending').forEach(u=>a.push({t:'사용자 승인 대기: '+u.name+' ('+site(u.site).name+')',f:()=>{admTab='users';go('admin');}}));
+  if(canManageAnnounce())S.reqs.filter(q=>!q.done&&(me.role!=='manager'||q.site===me.site)).forEach(q=>a.push({t:'입주민 민원: '+q.body.slice(0,28),f:()=>{announceSite=q.site;anTab='req';go('announce');}}));
+  return a;}
+function updateBell(){const n=myTodo().length;const b=document.getElementById('bellCnt');b.style.display=n?'':'none';b.textContent=n;}
+function openBell(){const a=myTodo();openSheet(`<div class="hd"><h3>알림 (${a.length})</h3><button class="x" onclick="closeSheet()">×</button></div><div class="list">${a.map((x,i)=>`<div class="it" style="cursor:pointer" onclick="closeSheet();bellAct(${i})"><div>🔔</div><div class="t"><b style="white-space:normal">${esc(x.t)}</b></div><span>›</span></div>`).join('')||'<div class="empty">처리할 알림이 없습니다</div>'}</div>
+  <div class="mini" style="margin-top:10px">브라우저 알림: <button class="btn sm ghost" onclick="askNotif()">허용하기</button> <span>${('Notification' in window)?Notification.permission:'미지원'}</span></div>`);}
+function bellAct(i){const a=myTodo()[i];if(a)a.f();}
+function askNotif(){if(!('Notification' in window))return toast('이 브라우저는 알림을 지원하지 않습니다');Notification.requestPermission().then(p=>toast('알림 권한: '+p));}
+function notify(title,body){if(('Notification' in window)&&Notification.permission==='granted'&&document.hidden){try{new Notification(title,{body,icon:'icon-192.png'});}catch(e){}}}
+
+/* ---------- 로그인 / 사용 신청 ---------- */
+function fillLogin(){document.getElementById('loginCompany').textContent=S.company.brand||'빌딩 매니저';
+  document.getElementById('loginUser').innerHTML=S.users.map(u=>`<option value="${u.id}">${esc(u.name)} · ${roleName(u.role)}${u.site?' · '+esc(site(u.site).name):''}${u.status!=='approved'?' (승인대기)':''}</option>`).join('');
+  document.getElementById('dbBadge').textContent=S.settings.gasUrl?'Google 스프레드시트':'로컬(브라우저)';}
+function quickLogin(role){const u=S.users.find(x=>x.role===role&&x.status==='approved'&&!siteExpired(x.site));if(u){document.getElementById('loginUser').value=u.id;doLogin();}}
+async function doLogin(){
+  if(S.settings.gasUrl){toast('스프레드시트에서 데이터 불러오는 중…');await DB.pull();S=DB.data;}
+  const u=user(document.getElementById('loginUser').value);if(!u.id)return;
+  if(u.status!=='approved'){alert(`[${u.name}] 아직 사용권한이 승인되지 않았습니다.\n전산관리자의 승인 후 접속할 수 있습니다.`);return;}
+  if(u.site&&siteExpired(u.site)){alert(`[${site(u.site).name}] 계약이 ${site(u.site).contractEnd}에 종료되어 접속 권한이 해제되었습니다.`);return;}
+  me=u;localStorage.setItem('bm.me',u.id);
+  document.getElementById('login').style.display='none';document.getElementById('main').style.display='block';
+  document.getElementById('hdCompany').textContent=S.company.name+(u.site?' · '+site(u.site).name:'');
+  document.getElementById('hdTitle').firstChild.textContent=S.company.brand;
+  document.getElementById('hdUser').textContent=u.name;document.getElementById('hdRole').textContent=u.title||roleName(u.role);
+  announceSite=u.site||S.sites.find(s=>s.announce)?.id||S.sites[0]?.id||'';
+  buildNav();updateBell();}
+function logout(){me=null;localStorage.removeItem('bm.me');document.getElementById('main').style.display='none';document.getElementById('login').style.display='block';fillLogin();}
+function openSignup(){openSheet(`<div class="hd"><h3>사용 신청</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <div class="mini">신청 후 전산관리자가 승인하면 접속할 수 있습니다.</div>
+  <label class="f">이름</label><input class="in" id="sg_name"><label class="f">연락처</label><input class="in" id="sg_phone" placeholder="010-0000-0000">
+  <label class="f">직책</label><input class="in" id="sg_title" placeholder="예) 기계팀장 / 계약사 PM">
+  <label class="f">역할</label><select class="in" id="sg_role"><option value="staff">실무자(팀장)</option><option value="manager">관리소장</option><option value="client">갑사 담당자</option><option value="operator">운영자(본사)</option></select>
+  <label class="f">사업장</label><select class="in" id="sg_site"><option value="">본사</option>${S.sites.filter(s=>!siteExpired(s.id)).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
+  <button class="btn" style="margin-top:14px" onclick="submitSignup()">신청</button>`);}
+function submitSignup(){const n=v('sg_name');if(!n)return toast('이름을 입력하세요');S.users.push({id:'u'+uid(),name:n,phone:v('sg_phone'),title:v('sg_title'),role:v('sg_role'),site:v('sg_site'),status:'pending',requestedAt:today()});DB.save();closeSheet();fillLogin();toast('신청 완료 — 승인 대기 중');}
+
+/* ---------- 내비게이션 ---------- */
+function buildNav(){
+  const items={
+    ceo:[['dash','📊','대시보드'],['sites','🏢','사업장'],['reports','📄','결재/보고'],['schedule','📅','일정'],['directives','📣','지시']],
+    operator:[['sites','🏢','사업장'],['reports','📄','보고서'],['schedule','📅','일정'],['directives','📣','지시'],['dash','📊','통계']],
+    manager:[['reports','📄','결재/보고'],['schedule','📅','일정'],['announce','📢','안내앱'],['directives','📣','지시'],['dash','📊','현장']],
+    staff:[['reports','📄','보고서'],['schedule','📅','일정'],['directives','📣','지시사항']],
+    client:[['reports','📄','운영보고'],['schedule','📅','일정'],['directives','🤝','요청사항']],
+    admin:[['admin','⚙️','CMS'],['reports','📄','보고서'],['announce','📢','안내앱'],['dash','📊','대시보드'],['sites','🏢','사업장']]
+  }[me.role];
+  document.getElementById('nav').innerHTML=items.map(([p,ic,l])=>`<button data-p="${p}" onclick="go('${p}')"><span class="ic">${ic}</span>${l}</button>`).join('');
+  go(items[0][0]);}
+function go(p){curPage=p;document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  ({dash:renderDash,sites:renderSites,reports:renderReports,schedule:renderSchedule,directives:renderDirectives,announce:renderAnnounce,admin:renderAdmin})[p]();updateBell();window.scrollTo(0,0);}
+function refresh(){if(curPage)go(curPage);}
+
+/* ---------- 대시보드 ---------- */
+document.getElementById('dashPeriod').addEventListener('click',e=>{if(e.target.dataset.p){dashPeriod=e.target.dataset.p;[...e.currentTarget.children].forEach(b=>b.classList.toggle('on',b===e.target));renderDash();}});
+function renderDash(){
+  const scope=me.role==='manager'?S.reports.filter(r=>r.site===me.site):S.reports;
+  const rs=scope.filter(r=>r.status!=='draft'&&inPeriod(r.date));const cnt=k=>rs.filter(r=>r.status===k).length;
+  const activeSites=S.sites.filter(s=>!siteExpired(s.id)).length;const ceoWait=S.reports.filter(r=>r.status==='pending'&&nextApproverRole(r)==='ceo');
+  const issues=scope.filter(isOpenIssue).sort((a,b)=>['긴급','높음','보통','낮음'].indexOf(a.vals.심각도)-['긴급','높음','보통','낮음'].indexOf(b.vals.심각도));
+  const dailyToday=scope.filter(r=>form(r.form)?.id==='f5'&&r.date===today()).length;
+  document.getElementById('dashSub').textContent=`${S.company.name} ${S.company.division} · 운영 사업장 ${activeSites}개 · ${today()}`;
+  const purchase=rs.filter(r=>form(r.form)?.cat==='구매'&&r.status==='approved').reduce((a,r)=>a+Number(r.vals['예상금액(원)']||0),0);
+  document.getElementById('dashKpi').innerHTML=`
+    <div class="kpi"><div class="n">${rs.length}</div><div class="l">제출 보고서</div></div>
+    <div class="kpi acc"><div class="n">${cnt('pending')}</div><div class="l">결재 진행중</div></div>
+    <div class="kpi"><div class="n" style="color:var(--bad)">${issues.length}</div><div class="l">미해결 이슈</div></div>
+    <div class="kpi"><div class="n">${dailyToday}<span style="font-size:14px;color:var(--sub)">/${me.role==='manager'?1:activeSites}</span></div><div class="l">금일 일일보고 제출 사업장</div></div>
+    <div class="kpi"><div class="n" style="color:var(--ok)">${rs.length?Math.round(cnt('approved')/rs.length*100):0}%</div><div class="l">승인율 (반려 ${cnt('rejected')})</div></div>
+    <div class="kpi"><div class="n" style="font-size:20px">${fmt(purchase)}</div><div class="l">승인 구매금액(원)</div></div>`;
+  document.getElementById('issueCnt').textContent=issues.length;
+  document.getElementById('dashIssues').innerHTML=issues.map(r=>`<div class="it" style="cursor:pointer" onclick="openReport('${r.id}')"><span class="chip sev${esc(r.vals.심각도)}">${esc(r.vals.심각도||'-')}</span><div class="t"><b>${esc(r.vals.이슈내용)}</b><small>${esc(site(r.site).name)} · ${esc(r.vals.이슈구분||'')} · 완료예정 ${r.vals.완료예정일||'-'}</small></div>${statusChip(r)}</div>`).join('')||'<div class="empty">미해결 이슈가 없습니다</div>';
+  const evs=S.events.filter(e=>(me.role!=='manager'||e.site===me.site)&&e.date>=today()&&e.date<=addDays(7)).sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('dashEvents').innerHTML=evs.map(e=>`<div class="it"><div style="font-weight:800;color:var(--navy);font-size:13px;width:46px">${e.date.slice(5)}</div><div class="t"><b style="white-space:normal">${e.imp?'⭐ ':''}${esc(e.title)}</b><small>${esc(site(e.site).name)}</small></div></div>`).join('')||'<div class="empty">등록된 일정이 없습니다</div>';
+  const sites=me.role==='manager'?S.sites.filter(s=>s.id===me.site):S.sites;const mx=Math.max(1,...sites.map(s=>rs.filter(r=>r.site===s.id).length));
+  document.getElementById('dashSites').innerHTML=sites.map(s=>{const a=rs.filter(r=>r.site===s.id);const w=k=>a.filter(r=>r.status===k).length/mx*100;
+    return `<div class="bar"><span class="lbl">${esc(s.name)}${siteExpired(s.id)?' ⛔':''}</span><span class="trk"><i style="width:${w('approved')}%;background:var(--ok)"></i><i style="width:${w('pending')}%;background:var(--wait)"></i><i style="width:${w('rejected')}%;background:var(--bad)"></i></span><span class="v">${a.length}</span></div>`;}).join('');
+  let statHtml='';S.forms.forEach(f=>{const kf=f.fields.filter(x=>x.kpi&&x.t==='number');if(!kf.length)return;const a=rs.filter(r=>r.form===f.id&&r.status!=='rejected');if(!a.length)return;
+    statHtml+=`<div style="margin-top:10px;font-weight:700;font-size:13px">${esc(f.name)} <span class="mini">(${a.length}건)</span></div><div class="grid3" style="margin-top:6px">`+kf.map(x=>`<div style="background:#f6f8fb;border-radius:9px;padding:8px 10px"><div class="mini">${esc(x.k)}</div><b>${fmt(a.reduce((t,r)=>t+Number(r.vals[x.k]||0),0))}</b></div>`).join('')+'</div>';});
+  document.getElementById('dashStats').innerHTML=statHtml||'<div class="empty">집계할 제출건이 없습니다</div>';
+  const fm=Math.max(1,...S.forms.map(f=>rs.filter(r=>r.form===f.id).length));
+  document.getElementById('dashForms').innerHTML=S.forms.map(f=>{const n=rs.filter(r=>r.form===f.id).length;return `<div class="bar"><span class="lbl">${esc(f.name)}</span><span class="trk"><i style="width:${n/fm*100}%;background:var(--navy2)"></i></span><span class="v">${n}</span></div>`;}).join('');
+  document.getElementById('ceoWaitCnt').textContent=ceoWait.length;document.getElementById('ceoWaitList').innerHTML=ceoWait.map(repItem).join('')||'<div class="empty">대기 건이 없습니다</div>';
+  document.getElementById('dashDirectives').innerHTML=S.directives.slice().reverse().slice(0,4).map(dirItem).join('')||'<div class="empty">지시사항 없음</div>';
+}
+
+/* ---------- 사업장 ---------- */
+function renderSites(){
+  document.getElementById('siteCards').innerHTML=S.sites.map(s=>{const rs=S.reports.filter(r=>r.site===s.id&&r.status!=='draft');const last=rs.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const pend=rs.filter(r=>r.status==='pending').length,iss=rs.filter(isOpenIssue).length;const staff=S.users.filter(u=>u.site===s.id&&u.status==='approved');const exp=siteExpired(s.id);
+    const dLeft=Math.ceil((new Date(s.contractEnd)-new Date())/864e5);const daily=rs.find(r=>r.form==='f5'&&r.date===today());
+    return `<div class="card"><div class="row between"><b style="font-size:16px">${esc(s.name)}</b>${exp?'<span class="chip bad">계약종료 · 권한해제</span>':dLeft<90?`<span class="chip draft">계약만료 D-${dLeft}</span>`:'<span class="chip ok">운영중</span>'}</div>
+      <div class="mini" style="margin-top:2px">${esc(s.type)} · 계약사 ${esc(s.client)} · PM ${esc(s.pm)} · ~${s.contractEnd}${s.announce?' · 📢 안내앱 사용':''}</div>
+      <div class="grid3" style="margin-top:10px">
+        <div style="background:${daily?'#e3f6ea':'#fff3d6'};border-radius:9px;padding:8px"><div class="mini">금일 일일보고</div><b>${daily?'제출':'미제출'}</b></div>
+        <div style="background:#e7ecff;border-radius:9px;padding:8px"><div class="mini">결재중</div><b style="color:var(--wait)">${pend}</b></div>
+        <div style="background:#fde7e6;border-radius:9px;padding:8px"><div class="mini">미해결 이슈</div><b style="color:var(--bad)">${iss}</b></div></div>
+      <div class="mini" style="margin-top:8px">최근: ${last?esc(last.title)+' ('+last.date+')':'없음'}<br>담당: ${staff.map(u=>esc(u.name)+'('+esc(u.title)+')').join(', ')||'-'}</div>
+      <div class="row wrap" style="margin-top:10px"><button class="btn sm ghost" onclick="filterSite='${s.id}';repFilter='all';go('reports')">보고서</button>${me.role!=='staff'&&me.role!=='client'?`<button class="btn sm" onclick="go('directives');document.getElementById('dirSite').value='${s.id}'">지시</button>`:''}${s.announce&&canManageAnnounce()?`<button class="btn sm acc" onclick="announceSite='${s.id}';go('announce')">안내앱 관리</button>`:''}</div>
+    </div>`;}).join('');}
+
+/* ---------- 보고서 ---------- */
+document.getElementById('repTabs').addEventListener('click',e=>{if(e.target.dataset.f){repFilter=e.target.dataset.f;filterSite='';[...e.currentTarget.children].forEach(b=>b.classList.toggle('on',b===e.target));renderReports();}});
+function repItem(r){const f=form(r.form);const next=nextApproverRole(r);
+  return `<div class="it" onclick="openReport('${r.id}')" style="cursor:pointer"><div style="width:40px;height:40px;border-radius:10px;background:#eef1f5;display:grid;place-items:center;font-size:18px;flex:none">${catIcon(f?.cat)}</div>
+  <div class="t"><b>${esc(r.title)}</b><small>${esc(site(r.site).name)} · ${esc(user(r.author).name)} · ${r.date}${r.status==='pending'&&next?' · 결재: '+roleName(next):''}${r.published?' · 📢게시':''}</small></div>${f?.cat==='이슈'&&r.vals.심각도?`<span class="chip sev${esc(r.vals.심각도)}">${esc(r.vals.심각도)}</span>`:''}${statusChip(r)}</div>`;}
+function renderReports(){
+  document.getElementById('btnNew').style.display=(me.role==='staff'||me.role==='manager')?'':'none';
+  let rs=visibleReports(me).slice().sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
+  if(filterSite)rs=rs.filter(r=>r.site===filterSite);
+  if(repFilter==='mine')rs=rs.filter(r=>canApprove(r,me));else if(repFilter==='issue')rs=rs.filter(r=>form(r.form)?.cat==='이슈');else if(repFilter==='daily')rs=rs.filter(r=>r.form==='f5');else if(repFilter!=='all')rs=rs.filter(r=>r.status===repFilter);
+  document.getElementById('repList').innerHTML=(filterSite?`<div class="mini" style="padding:6px 0">📍 ${esc(site(filterSite).name)} <button class="btn sm ghost" onclick="filterSite='';renderReports()">해제</button></div>`:'')+(rs.map(repItem).join('')||'<div class="empty">보고서가 없습니다</div>');}
+function openNewReport(){openSheet(`<div class="hd"><h3>새 보고서 — 양식 선택</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <div class="mini">양식은 전산관리자가 등록합니다. 빈칸만 채우면 보고서(PDF)가 자동 완성됩니다.</div>
+  <div class="list">${S.forms.map(f=>`<div class="it" style="cursor:pointer" onclick="editReport(null,'${f.id}')"><div style="font-size:22px">${catIcon(f.cat)}</div><div class="t"><b>${esc(f.name)}</b><small>${f.fields.length}개 항목 · 결재선 ${f.line.map(roleName).join(' → ')}</small></div><span>›</span></div>`).join('')}</div>`);}
+let pendingFiles={},editingVals={};
+const fid=k=>'fv_'+btoa(unescape(encodeURIComponent(k))).replace(/=/g,'');
+function fieldInput(x,v){const id=fid(x.k);
+  if(x.t==='textarea')return `<textarea class="in" id="${id}" placeholder="${esc(x.k)} 입력">${esc(v??'')}</textarea>`;
+  if(x.t==='select')return `<select class="in" id="${id}">${(x.opt||'').split('|').map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  if(x.t==='check')return `<div class="check"><input type="checkbox" id="${id}" ${v?'checked':''}><label for="${id}">예 / 완료</label></div>`;
+  if(x.t==='number')return `<input class="in" type="number" inputmode="decimal" id="${id}" value="${esc(v??'')}">`;
+  if(x.t==='date')return `<input class="in" type="date" id="${id}" value="${esc(v??'')}">`;
+  if(x.t==='file')return `<input class="in" type="file" accept="application/pdf,image/*" id="${id}" onchange="pickFile(this,'${esc(x.k)}')"><div class="mini" id="${id}_n">${v&&v.name?'현재 첨부: '+esc(v.name)+(v.url?' (Drive)':''):'PDF 또는 사진 (최대 2MB)'}</div>`;
+  return `<input class="in" id="${id}" value="${esc(v??'')}" placeholder="${esc(x.k)}">`;}
+function pickFile(inp,k){const f=inp.files[0];if(!f)return;if(f.size>2*1024*1024){toast('2MB 이하 파일만 첨부할 수 있습니다');inp.value='';return;}
+  const rd=new FileReader();rd.onload=()=>{pendingFiles[k]={name:f.name,type:f.type,size:f.size,data:rd.result};document.getElementById(fid(k)+'_n').textContent='첨부됨: '+f.name+' ('+Math.round(f.size/1024)+'KB)';};rd.readAsDataURL(f);}
+function readField(x){const el=document.getElementById(fid(x.k));if(x.t==='file')return pendingFiles[x.k]||editingVals[x.k]||null;if(!el)return '';return x.t==='check'?el.checked:el.value;}
+function editReport(rid,fidv,prefill){const r=rid?S.reports.find(x=>x.id===rid):null;const f=form(fidv||r.form);pendingFiles={};editingVals=Object.assign({},prefill||{},r?.vals||{});
+  openSheet(`<div class="hd"><h3>${esc(f.name)}</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <div class="mini">${esc(site(me.site).name)} · 작성자 ${esc(me.name)}</div>
+  <label class="f">보고 일자</label><input class="in" type="date" id="rdate" value="${r?r.date:today()}">
+  ${f.fields.map(x=>`<label class="f">${esc(x.k)}${x.req?' <span class="req">*</span>':''}${x.kpi?' <span class="chip" style="font-size:10px">통계</span>':''}</label>${fieldInput(x,editingVals[x.k])}`).join('')}
+  <div class="row" style="margin-top:16px"><button class="btn ghost" onclick="saveReport('${rid||''}','${f.id}','draft')">임시저장</button><button class="btn acc" onclick="saveReport('${rid||''}','${f.id}','pending')">제출(결재요청)</button></div>
+  <button class="btn gray" style="margin-top:8px" onclick="previewDraft('${f.id}')">미리보기</button>`);}
+function collect(f){const vals={};for(const x of f.fields)vals[x.k]=readField(x);return vals;}
+function previewDraft(fidv){const f=form(fidv);showDoc({id:'tmp',form:fidv,site:me.site,author:me.id,date:document.getElementById('rdate').value,vals:collect(f),status:'draft',step:0,hist:[]},true);}
+async function saveReport(rid,fidv,status){
+  const f=form(fidv);const vals=collect(f);
+  if(status==='pending'){const miss=f.fields.filter(x=>x.req&&(vals[x.k]===''||vals[x.k]==null||vals[x.k]===false&&x.t!=='check'));if(miss.length){toast('필수 항목: '+miss.map(x=>x.k).join(', '));return;}}
+  if(S.settings.gasUrl){for(const x of f.fields){const fv=vals[x.k];if(x.t==='file'&&fv&&fv.data){try{toast('첨부파일 업로드 중…');const url=await DB.upload(fv);vals[x.k]={name:fv.name,type:fv.type,size:fv.size,url};}catch(e){toast('Drive 업로드 실패 — 기기에만 저장됩니다');}}}}
+  const first=f.fields.find(x=>x.t==='text'||x.t==='textarea');const title=f.name+' - '+String(first?vals[first.k]:'').slice(0,18);
+  let r=rid?S.reports.find(x=>x.id===rid):null;if(!r){r={id:uid(),form:fidv,site:me.site,author:me.id,hist:[],step:0};S.reports.push(r);}
+  Object.assign(r,{vals,title,date:document.getElementById('rdate').value||today(),status});
+  if(status==='pending'){r.step=0;r.hist.push({at:now(),by:me.id,act:'제출'});}
+  try{DB.save();}catch(e){toast('저장 용량 초과 — 첨부파일을 줄이거나 시트 연동을 사용하세요');return;}
+  closeSheet();toast(status==='pending'?'제출 완료 — 결재선으로 전달되었습니다':'임시저장됨');refresh();if(status==='pending')openReport(r.id);}
+function fmtVal(x,vv){if(x.t==='check')return vv?'예':'아니오';if(x.t==='number')return fmt(vv);if(x.t==='file')return vv&&vv.name?('📎 '+vv.name):'-';return vv??'';}
+function openFile(rid,k){const r=S.reports.find(x=>x.id===rid);const fv=r.vals[k];if(!fv)return;if(fv.url)return window.open(fv.url,'_blank');if(!fv.data)return toast('이 기기에 파일이 없습니다 (작성 기기에만 저장됨)');
+  const b=atob(fv.data.split(',')[1]);const arr=new Uint8Array(b.length);for(let i=0;i<b.length;i++)arr[i]=b.charCodeAt(i);const url=URL.createObjectURL(new Blob([arr],{type:fv.type}));const a=document.createElement('a');a.href=url;a.target='_blank';a.download=fv.name;a.click();}
+function openReport(id){const r=S.reports.find(x=>x.id===id);if(!r)return;const f=form(r.form);
+  const appr=approvalsOf(r);const line=f.line.map((role,i)=>{const h=appr[i];const isNow=r.status==='pending'&&i===r.step;
+    return `<div class="e ${h?'ok':isNow?'now':''}">${roleName(role)} ${h?`<span class="chip ok">승인</span> <span class="mini">${esc(user(h.by).name)} · ${h.at}</span>`:isNow?'<span class="chip wait">결재 대기</span>':'<span class="mini">대기</span>'}</div>`;}).join('');
+  const rej=r.hist.filter(x=>x.act==='반려').slice(-1)[0];const actions=[];
+  if(canApprove(r,me))actions.push(`<button class="btn ok" onclick="approve('${r.id}')">승인</button><button class="btn bad" onclick="reject('${r.id}')">반려</button>`);
+  if((r.author===me.id||me.role==='manager'&&r.site===me.site)&&(r.status==='draft'||r.status==='rejected'))actions.push(`<button class="btn" onclick="closeSheet();editReport('${r.id}')">수정 후 재제출</button>`);
+  const files=f.fields.filter(x=>x.t==='file'&&r.vals[x.k]&&r.vals[x.k].name);
+  openSheet(`<div class="hd"><h3>${esc(r.title)}</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <div class="row between"><span class="mini">${esc(site(r.site).name)} · ${esc(user(r.author).name)} · ${r.date}</span>${statusChip(r)}</div>
+  ${rej?`<div class="notice">반려 사유: ${esc(rej.memo||'')} <span class="mini">(${esc(user(rej.by).name)} · ${rej.at})</span></div>`:''}
+  <h3>결재선</h3><div class="tl"><div class="e ok">작성/제출 <span class="mini">${esc(user(r.author).name)} · ${r.hist.filter(h=>h.act==='제출').slice(-1)[0]?.at||''}</span></div>${line}</div>
+  <h3>보고 내용</h3><div class="card tight" style="margin-top:4px">${f.fields.map(x=>`<div class="row between" style="padding:5px 0;border-bottom:1px solid var(--line);font-size:13px"><span class="mini">${esc(x.k)}</span><b style="text-align:right;max-width:65%;white-space:pre-wrap">${esc(fmtVal(x,r.vals[x.k]))}</b></div>`).join('')}</div>
+  ${files.length?`<div class="row wrap" style="margin-top:8px">${files.map(x=>`<button class="btn sm ghost" onclick="openFile('${r.id}','${esc(x.k)}')">📎 ${esc(r.vals[x.k].name)} 열기</button>`).join('')}</div>`:''}
+  <div class="row" style="margin-top:14px">${actions.join('')}</div>
+  <button class="btn ghost" style="margin-top:8px" onclick="showDoc('${r.id}')">📄 보고서(PDF) 보기 / 저장</button>
+  ${r.status==='approved'&&canManageAnnounce()&&site(r.site).announce?`<button class="btn acc" style="margin-top:8px" onclick="publishReport('${r.id}')">📢 안내앱에 게시 + 알림 공고${r.published?' (재게시)':''}</button>`:''}
+  ${me.role!=='staff'?`<button class="btn gray" style="margin-top:8px" onclick="commentReport('${r.id}')">💬 ${me.role==='client'?'문의/요청 남기기':'코멘트/지시 남기기'}</button>`:''}
+  ${r.comments?.length?`<h3>코멘트</h3>${r.comments.map(c=>`<div class="mini" style="padding:4px 0"><b>${esc(user(c.by).name)}</b> ${c.at}<br>${esc(c.text)}</div>`).join('')}`:''}`);}
+function approve(id){const r=S.reports.find(x=>x.id===id);const f=form(r.form);r.hist.push({at:now(),by:me.id,act:'승인'});r.step++;
+  if(r.step>=f.line.length){r.status='approved';toast('최종 승인 완료');}else toast('승인 — 다음 결재자: '+roleName(f.line[r.step]));DB.save();closeSheet();refresh();}
+function reject(id){const memo=prompt('반려 사유를 입력하세요');if(memo===null)return;const r=S.reports.find(x=>x.id===id);r.hist.push({at:now(),by:me.id,act:'반려',memo});r.status='rejected';DB.save();closeSheet();toast('반려 처리됨');refresh();}
+function commentReport(id){const t=prompt(me.role==='client'?'문의/요청 내용':'코멘트 / 지시 내용');if(!t)return;const r=S.reports.find(x=>x.id===id);(r.comments=r.comments||[]).push({by:me.id,at:now(),text:t});
+  S.directives.push({id:uid(),site:r.site,by:me.id,at:now(),text:`${me.role==='client'?'[갑사 요청] ':''}[${r.title}] ${t}`,done:false});DB.save();openReport(id);toast('전달되었습니다');}
+function renderBody(r){const f=form(r.form);let body=f.template||'';for(const x of f.fields)body=body.split('{{'+x.k+'}}').join(fmtVal(x,r.vals[x.k])||'-');return body;}
+function publishReport(id){const r=S.reports.find(x=>x.id===id);const f=form(r.form);
+  const title=prompt('안내앱 공지 제목',`[업무보고] ${f.name} ${r.date}`);if(title===null)return;
+  S.notices.push({id:'n'+uid(),site:r.site,at:now(),title,body:renderBody(r),imp:false,by:me.id,type:'report',reportId:r.id});r.published=true;DB.save();closeSheet();toast('안내앱에 게시되었습니다 — 입주민 알림 공고');refresh();}
+
+/* ---------- PDF 문서 ---------- */
+function renderDoc(r){const f=form(r.form),s=site(r.site),a=user(r.author);const approvals=approvalsOf(r);const submitAt=r.hist.filter(h=>h.act==='제출').slice(-1)[0]?.at||'';
+  const apprCells=f.line.map((role,i)=>{const h=approvals[i];return `<td>${h?`<div class="stamp">승인</div><div>${esc(user(h.by).name)}</div><div style="font-size:10px">${h.at.slice(5)}</div>`:''}</td>`;}).join('');
+  const docNo=`${(s.id||'HQ').toUpperCase()}-${r.date.replace(/-/g,'')}-${String(r.id).slice(-4).toUpperCase()}`;
+  return `<div class="doc"><div class="appr"><table><tr><th>작성</th>${f.line.map(x=>`<th>${roleName(x)}</th>`).join('')}</tr><tr><td><div>${esc(a.name)}</div><div style="font-size:10px">${submitAt.slice(5)}</div></td>${apprCells}</tr></table></div>
+    <div class="dt">${esc(f.name)}</div>
+    <table><tr><th>문서번호</th><td>${docNo}</td><th>보고일자</th><td>${r.date}</td></tr><tr><th>회사</th><td>${esc(S.company.name)}</td><th>사업장</th><td>${esc(s.name)}</td></tr><tr><th>계약사</th><td>${esc(s.client||'')}</td><th>작성자</th><td>${esc(a.name)} (${esc(a.title||'')})</td></tr></table>
+    <table>${f.fields.map(x=>`<tr><th>${esc(x.k)}</th><td colspan="3">${esc(fmtVal(x,r.vals[x.k]))}</td></tr>`).join('')}</table>
+    <div class="body">${esc(renderBody(r))}</div>
+    <div class="foot"><span>${esc(S.company.footer||'')}</span><span>상태: ${{approved:'최종승인',pending:'결재진행중',rejected:'반려',draft:'작성중'}[r.status]}</span></div></div>`;}
+function showDoc(idOrObj,isTmp){const r=isTmp?idOrObj:S.reports.find(x=>x.id===idOrObj);const html=renderDoc(r);document.getElementById('printArea').innerHTML=html;
+  openSheet(`<div class="hd"><h3>보고서 미리보기</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <div class="mini no-print">브라우저 인쇄창에서 <b>"PDF로 저장"</b>을 선택하면 A4 PDF가 생성됩니다. 주거용 빌딩은 출력하여 게시하거나 "안내앱에 게시"로 알림 공고하세요.</div>
+  <button class="btn acc no-print" style="margin:10px 0" onclick="window.print()">📄 PDF로 저장 / 인쇄</button><div style="overflow:auto">${html}</div>`);}
+
+/* ---------- 중요업무일정 ---------- */
+function renderSchedule(){
+  const can=['staff','manager','operator','admin'].includes(me.role);document.getElementById('evNew').style.display=can?'':'none';
+  const sel=document.getElementById('ev_site');sel.innerHTML=mySites().filter(s=>!siteExpired(s.id)).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');if(me.site)sel.value=me.site;
+  if(!document.getElementById('ev_date').value)document.getElementById('ev_date').value=today();
+  const tabs=document.getElementById('evTabs');tabs.innerHTML=(mySites().length>1?`<button class="${evSiteFilter===''?'on':''}" data-s="">전체 사업장</button>`:'')+mySites().map(s=>`<button class="${evSiteFilter===s.id?'on':''}" data-s="${s.id}">${esc(s.name)}</button>`).join('');
+  tabs.onclick=e=>{if(e.target.dataset.s!==undefined){evSiteFilter=e.target.dataset.s;renderSchedule();}};
+  let evs=S.events.filter(e=>mySites().some(s=>s.id===e.site));if(evSiteFilter)evs=evs.filter(e=>e.site===evSiteFilter);else if(me.site)evs=evs.filter(e=>e.site===me.site);
+  evs=evs.filter(e=>e.date>=addDays(-1)).sort((a,b)=>a.date.localeCompare(b.date));
+  let html='',last='';evs.forEach(e=>{if(e.date!==last){last=e.date;const dn=['일','월','화','수','목','금','토'][new Date(e.date).getDay()];html+=`<div class="day">${e.date} (${dn})${e.date===today()?' · 오늘':''}</div>`;}
+    html+=`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div style="flex:1"><b style="font-size:14px">${e.imp?'⭐ ':''}${esc(e.title)}</b><div class="mini">${esc(site(e.site).name)} · 등록 ${esc(user(e.by).name)}</div></div>${(can&&(e.by===me.id||['manager','operator','admin'].includes(me.role)))?`<button class="btn sm bad" onclick="delEvent('${e.id}')">삭제</button>`:''}</div>`;});
+  document.getElementById('evList').innerHTML=html||'<div class="empty">예정된 일정이 없습니다</div>';}
+function addEvent(){const t=v('ev_title'),d=v('ev_date');if(!t||!d)return toast('일자와 일정을 입력하세요');S.events.push({id:'e'+uid(),site:v('ev_site'),date:d,title:t,imp:document.getElementById('ev_imp').checked?1:0,by:me.id});document.getElementById('ev_title').value='';DB.save();renderSchedule();toast('일정이 등록되었습니다');}
+function delEvent(id){if(!confirm('일정을 삭제할까요?'))return;S.events=S.events.filter(e=>e.id!==id);DB.save();renderSchedule();}
+
+/* ---------- 지시 · 소통 ---------- */
+function dirItem(d){const isClient=user(d.by).role==='client';return `<div class="it"><div style="font-size:20px">${d.done?'✅':isClient?'🤝':'📣'}</div><div class="t"><b style="white-space:normal">${esc(d.text)}</b><small>${esc(site(d.site).name)} · ${esc(user(d.by).name)}${isClient?' (갑사)':''} · ${d.at}</small></div>${!d.done&&(me.role==='staff'||me.role==='manager')&&me.site===d.site?`<button class="btn sm ok" onclick="doneDir('${d.id}')">완료</button>`:''}</div>`;}
+function renderDirectives(){
+  const isClient=me.role==='client';const canSend=['ceo','operator','manager','client'].includes(me.role);
+  document.getElementById('dirTitle').textContent=isClient?'요청사항':'지시 · 소통';document.getElementById('dirSub').textContent=isClient?'계약사 ↔ 관리소 실시간 소통 — 업무 요청과 처리 결과를 공유합니다':'본사/사업부 ↔ 사업장 실시간 지시사항';
+  document.getElementById('dirLabel').textContent=isClient?'요청 내용':'지시 내용';document.getElementById('dirBtn').textContent=isClient?'요청 전송':'지시 전송';
+  document.getElementById('dirNew').style.display=canSend?'':'none';
+  const sel=document.getElementById('dirSite');sel.innerHTML=mySites().filter(s=>!siteExpired(s.id)).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  let ds=S.directives.slice().reverse();if(me.site)ds=ds.filter(d=>d.site===me.site);if(isClient)ds=ds.filter(d=>d.by===me.id);
+  document.getElementById('dirList').innerHTML=ds.map(dirItem).join('')||'<div class="empty">내역이 없습니다</div>';}
+function sendDirective(){const t=document.getElementById('dirText').value.trim();if(!t)return toast('내용을 입력하세요');S.directives.push({id:uid(),site:document.getElementById('dirSite').value,by:me.id,at:now(),text:(me.role==='client'?'[갑사 요청] ':'')+t,done:false});document.getElementById('dirText').value='';DB.save();renderDirectives();toast('전송되었습니다');}
+function doneDir(id){const d=S.directives.find(x=>x.id===id);d.done=true;DB.save();renderDirectives();updateBell();}
+
+/* ---------- 안내앱 관리 (공지·투표·입주민 승인·민원·관리비·게시판) ---------- */
+document.getElementById('anTabs').addEventListener('click',e=>{if(e.target.dataset.t){anTab=e.target.dataset.t;renderAnnounce();}});
+function renderAnnounce(){
+  if(!canManageAnnounce()){document.getElementById('anBody').innerHTML='<div class="empty">권한이 없습니다</div>';return;}
+  const sel=document.getElementById('anSite');const ss=mySites();sel.innerHTML=ss.map(s=>`<option value="${s.id}">${esc(s.name)}${s.announce?'':' (안내앱 미사용)'}</option>`).join('');
+  if(!ss.some(s=>s.id===announceSite))announceSite=ss[0]?.id||'';sel.value=announceSite;sel.style.display=ss.length>1?'':'none';
+  [...document.getElementById('anTabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===anTab));
+  const sid=announceSite,B=document.getElementById('anBody');const s=site(sid);
+  const head=`<div class="mini" style="margin-top:8px">📍 ${esc(s.name)} · 안내앱 접속코드 <b>${esc(s.accessCode||'-')}</b> · ${s.announce?'사용 중':'<span style="color:var(--bad)">안내앱 미사용 (전산관리자 › 사업장에서 활성화)</span>'}</div>`;
+  if(anTab==='notice'){const ns=S.notices.filter(n=>n.site===sid).slice().reverse();
+    B.innerHTML=head+`<div class="card"><b>공지 등록 → 입주민 알림 공고</b><label class="f">제목</label><input class="in" id="n_title"><label class="f">내용</label><textarea class="in" id="n_body"></textarea><div class="check"><input type="checkbox" id="n_imp"><label for="n_imp">중요 공지 (상단 고정)</label></div><button class="btn acc" style="margin-top:12px" onclick="addNotice()">게시 + 알림</button></div>
+    <div class="card list">${ns.map(n=>`<div class="it"><div>${n.type==='report'?'📄':n.imp?'🔴':'📢'}</div><div class="t"><b>${esc(n.title)}</b><small>${n.at} · ${esc(user(n.by).name)}${n.type==='report'?' · 업무보고 게시':''}</small></div><button class="btn sm bad" onclick="delItem('notices','${n.id}')">삭제</button></div>`).join('')||'<div class="empty">공지가 없습니다</div>'}</div>`;}
+  if(anTab==='poll'){const ps=S.polls.filter(p=>p.site===sid).slice().reverse();const resCnt=S.residents.filter(r=>r.site===sid&&r.status==='approved').length;
+    B.innerHTML=head+`<div class="card"><b>표결 안건 등록</b><div class="mini">입주민은 안내앱에서 <b>투표만</b> 할 수 있습니다 (세대당 1표, 결과 열람).</div><label class="f">안건</label><input class="in" id="p_title"><label class="f">설명</label><textarea class="in" id="p_desc" style="min-height:60px"></textarea><label class="f">선택지 (줄바꿈 구분)</label><textarea class="in" id="p_opts" style="min-height:60px">찬성\n반대\n기권</textarea><label class="f">마감일</label><input class="in" type="date" id="p_close" value="${addDays(7)}"><button class="btn" style="margin-top:12px" onclick="addPoll()">투표 개시 + 알림</button></div>
+    ${ps.map(p=>{const tot=Object.keys(p.votes||{}).length;return `<div class="card"><div class="row between"><b>${esc(p.title)}</b>${p.status==='open'&&p.closes>=today()?'<span class="chip ok">진행중</span>':'<span class="chip">마감</span>'}</div><div class="mini">${esc(p.desc||'')} · 마감 ${p.closes} · 참여 ${tot}/${resCnt}세대</div>
+      ${p.options.map((o,i)=>{const n=Object.values(p.votes||{}).filter(x=>x===i).length;return `<div style="margin-top:8px;font-size:13px"><div class="row between"><span>${esc(o)}</span><b>${n}표 (${tot?Math.round(n/tot*100):0}%)</b></div><div class="pollbar"><i style="width:${tot?n/tot*100:0}%"></i></div></div>`;}).join('')}
+      <div class="row" style="margin-top:10px">${p.status==='open'?`<button class="btn sm gray" onclick="closePoll('${p.id}')">마감</button>`:''}<button class="btn sm bad" onclick="delItem('polls','${p.id}')">삭제</button></div></div>`;}).join('')}`;}
+  if(anTab==='resident'){const pend=S.residents.filter(r=>r.site===sid&&r.status==='pending'),ok=S.residents.filter(r=>r.site===sid&&r.status==='approved'),off=S.residents.filter(r=>r.site===sid&&r.status==='revoked');
+    B.innerHTML=head+`<div class="card"><div class="row between"><b>승인 대기</b><span class="chip acc">${pend.length}</span></div><div class="list">${pend.map(r=>`<div class="it"><div class="t"><b>${esc(r.unit)} · ${esc(r.name)}</b><small>${esc(r.phone||'')} · 신청 ${r.requestedAt||''}</small></div><button class="btn sm ok" onclick="setRes('${r.id}','approved')">승인</button><button class="btn sm bad" onclick="setRes('${r.id}','revoked')">거절</button></div>`).join('')||'<div class="empty">대기 중인 신청이 없습니다</div>'}</div>
+    <div class="card"><div class="row between"><b>사용 중 (${ok.length})</b><button class="btn sm ghost" onclick="addResident()">＋ 직접 등록</button></div><div class="list">${ok.map(r=>`<div class="it"><div class="t"><b>${esc(r.unit)} · ${esc(r.name)}</b><small>${esc(r.phone||'')} · PIN ${esc(r.pin)}</small></div><button class="btn sm gray" onclick="setRes('${r.id}','revoked')">권한 해제</button></div>`).join('')||'<div class="empty">없음</div>'}</div>
+    ${off.length?`<div class="card"><b>해제됨 (${off.length})</b><div class="list">${off.map(r=>`<div class="it"><div class="t"><b>${esc(r.unit)} · ${esc(r.name)}</b></div><button class="btn sm ok" onclick="setRes('${r.id}','approved')">재승인</button></div>`).join('')}</div></div>`:''}
+    <div class="notice">☆ 입주민/입주사도 관리자의 승인 후 안내앱을 사용할 수 있으며, 사업장 계약 종료 시 전체 접속이 자동 해제됩니다.</div>`;}
+  if(anTab==='req'){const qs=S.reqs.filter(q=>q.site===sid).slice().reverse();
+    B.innerHTML=head+`<div class="card list">${qs.map(q=>`<div class="it"><div>${q.done?'✅':'🛎️'}</div><div class="t"><b style="white-space:normal">${esc(q.body)}</b><small>${esc(q.unit)} · ${q.at}</small></div>${!q.done?`<button class="btn sm" onclick="reqToReport('${q.id}')">보고서</button><button class="btn sm ok" onclick="doneReq('${q.id}')">완료</button>`:''}</div>`).join('')||'<div class="empty">접수된 민원이 없습니다</div>'}</div><div class="mini" style="margin-top:8px">"보고서" → 민원 처리 보고서 양식이 접수내용으로 미리 채워집니다.</div>`;}
+  if(anTab==='fee'){const fs=S.fees.filter(f=>f.site===sid).slice().sort((a,b)=>(b.month+b.unit).localeCompare(a.month+a.unit));
+    B.innerHTML=head+`<div class="card"><b>관리비 내역 등록</b><div class="grid2"><div><label class="f">청구월</label><input class="in" type="month" id="f_month" value="${today().slice(0,7)}"></div><div><label class="f">납기일</label><input class="in" type="date" id="f_due"></div></div><label class="f">세대/호 (승인된 입주민 단위)</label><input class="in" id="f_unit" list="unitList" placeholder="예) 304동 1203호"><datalist id="unitList">${S.residents.filter(r=>r.site===sid&&r.status==='approved').map(r=>`<option value="${esc(r.unit)}">`).join('')}</datalist>
+      <label class="f">항목:금액 (줄바꿈 구분)</label><textarea class="in" id="f_items" placeholder="일반관리비:52000&#10;청소비:18000"></textarea><button class="btn" style="margin-top:12px" onclick="addFee()">등록 + 알림</button></div>
+    <div class="card list">${fs.map((f,i)=>`<div class="it"><div class="t"><b>${f.month} · ${esc(f.unit)}</b><small>${f.items.length}개 항목 · 합계 ${fmt(f.items.reduce((a,[,x])=>a+Number(x),0))}원 · 납기 ${f.due||'-'}</small></div><button class="btn sm bad" onclick="delFee('${f.month}','${esc(f.unit)}')">삭제</button></div>`).join('')||'<div class="empty">등록된 관리비가 없습니다</div>'}</div>`;}
+  if(anTab==='board'){const bs=S.board.filter(b=>b.site===sid).slice().reverse();
+    B.innerHTML=head+`<div class="card"><b>게시판 (관리소 업무홍보·안내 전용)</b><label class="f">구분</label><select class="in" id="b_cat"><option>업무안내</option><option>점검일정</option><option>홍보</option><option>생활정보</option></select><label class="f">제목</label><input class="in" id="b_title"><label class="f">내용</label><textarea class="in" id="b_body"></textarea><button class="btn" style="margin-top:12px" onclick="addBoard()">게시</button></div>
+    <div class="card list">${bs.map(b=>`<div class="it"><div class="t"><b><span class="chip">${esc(b.cat)}</span> ${esc(b.title)}</b><small>${b.at}</small></div><button class="btn sm bad" onclick="delItem('board','${b.id}')">삭제</button></div>`).join('')||'<div class="empty">게시물이 없습니다</div>'}</div>`;}
+}
+function addNotice(){const t=v('n_title');if(!t)return toast('제목을 입력하세요');S.notices.push({id:'n'+uid(),site:announceSite,at:now(),title:t,body:v('n_body'),imp:document.getElementById('n_imp').checked,by:me.id});DB.save();renderAnnounce();toast('게시 완료 — 입주민에게 알림 공고');}
+function addPoll(){const t=v('p_title');const opts=v('p_opts').split('\n').map(x=>x.trim()).filter(Boolean);if(!t||opts.length<2)return toast('안건과 선택지 2개 이상을 입력하세요');S.polls.push({id:'p'+uid(),site:announceSite,title:t,desc:v('p_desc'),options:opts,closes:v('p_close')||addDays(7),votes:{},status:'open',by:me.id});
+  S.notices.push({id:'n'+uid(),site:announceSite,at:now(),title:'[투표] '+t,body:'안내앱 › 투표 메뉴에서 '+(v('p_close')||addDays(7))+'까지 참여해 주세요.',imp:true,by:me.id,type:'poll'});DB.save();renderAnnounce();toast('투표가 개시되었습니다');}
+function closePoll(id){const p=S.polls.find(x=>x.id===id);p.status='closed';DB.save();renderAnnounce();}
+function delItem(k,id){if(!confirm('삭제할까요?'))return;S[k]=S[k].filter(x=>x.id!==id);DB.save();renderAnnounce();}
+function setRes(id,st){const r=S.residents.find(x=>x.id===id);r.status=st;if(st==='approved')r.approvedAt=today();DB.save();renderAnnounce();updateBell();toast(st==='approved'?'승인됨 — 안내앱 접속 가능':'권한이 해제되었습니다');}
+function addResident(){openSheet(`<div class="hd"><h3>입주민/입주사 직접 등록</h3><button class="x" onclick="closeSheet()">×</button></div><label class="f">세대/호</label><input class="in" id="ar_unit" placeholder="304동 1203호 / 12층 ㈜알파"><label class="f">이름(상호)</label><input class="in" id="ar_name"><label class="f">연락처</label><input class="in" id="ar_phone"><label class="f">PIN (4자리)</label><input class="in" id="ar_pin" value="1234"><button class="btn" style="margin-top:14px" onclick="saveResident()">등록(승인 상태)</button>`);}
+function saveResident(){if(!v('ar_unit')||!v('ar_name'))return toast('세대와 이름을 입력하세요');S.residents.push({id:'rs'+uid(),site:announceSite,unit:v('ar_unit'),name:v('ar_name'),phone:v('ar_phone'),pin:v('ar_pin')||'1234',status:'approved',approvedAt:today()});DB.save();closeSheet();renderAnnounce();}
+function doneReq(id){const q=S.reqs.find(x=>x.id===id);q.done=true;q.doneAt=now();DB.save();renderAnnounce();updateBell();}
+function reqToReport(id){const q=S.reqs.find(x=>x.id===id);if(me.role!=='manager'&&me.role!=='staff'){toast('보고서 작성은 사업장 담당자(소장/팀장)가 합니다');return;}editReport(null,'f4',{접수경로:'안내앱',민원내용:`[${q.unit}] ${q.body}`});}
+function addFee(){const items=v('f_items').split('\n').map(l=>l.split(':').map(s=>s.trim())).filter(x=>x.length===2&&x[0]).map(([k,x])=>[k,Number(x.replace(/[^\d]/g,''))]);const mo=v('f_month'),un=v('f_unit');if(!mo||!un||!items.length)return toast('청구월·세대·항목을 입력하세요');
+  S.fees=S.fees.filter(f=>!(f.site===announceSite&&f.month===mo&&f.unit===un));S.fees.push({site:announceSite,month:mo,unit:un,due:v('f_due'),items});
+  S.notices.push({id:'n'+uid(),site:announceSite,at:now(),title:`${mo} 관리비 고지 (${un})`,body:`${mo} 관리비 ${fmt(items.reduce((a,[,x])=>a+x,0))}원이 고지되었습니다. 납기일 ${v('f_due')||'-'}. 안내앱 › 관리비에서 상세 내역을 확인하세요.`,imp:false,by:me.id,type:'fee',unit:un});DB.save();renderAnnounce();toast('등록 + 해당 세대 알림');}
+function delFee(mo,un){if(!confirm('삭제할까요?'))return;S.fees=S.fees.filter(f=>!(f.site===announceSite&&f.month===mo&&f.unit===un));DB.save();renderAnnounce();}
+function addBoard(){const t=v('b_title');if(!t)return toast('제목을 입력하세요');S.board.push({id:'b'+uid(),site:announceSite,at:today(),cat:v('b_cat'),title:t,body:v('b_body')});DB.save();renderAnnounce();}
+
+/* ---------- 전산관리자 CMS ---------- */
+document.getElementById('admTabs').addEventListener('click',e=>{if(e.target.dataset.t){admTab=e.target.dataset.t;renderAdmin();}});
+const v=id=>document.getElementById(id).value.trim();
+function renderAdmin(){
+  [...document.getElementById('admTabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===admTab));const B=document.getElementById('admBody');
+  if(admTab==='users'){const pend=S.users.filter(u=>u.status==='pending'),ok=S.users.filter(u=>u.status==='approved'),off=S.users.filter(u=>u.status==='revoked');
+    const row=u=>`<div class="it"><div class="t"><b>${esc(u.name)} <span class="chip">${roleName(u.role)}</span>${u.site&&siteExpired(u.site)?' <span class="chip bad">계약종료</span>':''}</b><small>${esc(u.title||'')} · ${u.site?esc(site(u.site).name):'본사'}${u.phone?' · '+esc(u.phone):''}</small></div>`;
+    B.innerHTML=`<div class="card"><div class="row between"><b>사용 신청 승인 대기</b><span class="chip acc">${pend.length}</span></div><div class="list">${pend.map(u=>row(u)+`<button class="btn sm ok" onclick="setUser('${u.id}','approved')">승인</button><button class="btn sm bad" onclick="setUser('${u.id}','revoked')">거절</button></div>`).join('')||'<div class="empty">대기 중인 신청이 없습니다</div>'}</div>
+    <div class="card"><div class="row between"><b>사용 중 (${ok.length})</b><button class="btn sm ghost" onclick="editUser('')">＋ 추가</button></div><div class="list">${ok.map(u=>row(u)+`<button class="btn sm ghost" onclick="editUser('${u.id}')">수정</button>${u.role!=='admin'?`<button class="btn sm gray" onclick="setUser('${u.id}','revoked')">해제</button>`:''}</div>`).join('')}</div>
+    ${off.length?`<div class="card"><b>권한 해제됨 (${off.length})</b><div class="list">${off.map(u=>row(u)+`<button class="btn sm ok" onclick="setUser('${u.id}','approved')">재승인</button><button class="btn sm bad" onclick="if(confirm('삭제?')){S.users=S.users.filter(x=>x.id!=='${u.id}');DB.save();renderAdmin();}">삭제</button></div>`).join('')}</div></div>`:''}
+    <div class="notice">☆ 두 앱(관리자 앱·안내앱) 모두 승인된 사용자만 접속할 수 있습니다. 사업장 계약종료일이 지나면 소속 사용자·입주민 접속이 자동 차단됩니다. 입주민 승인은 안내앱 관리 › 입주민 승인 탭에서 합니다.</div>`;}
+  if(admTab==='sites'){B.innerHTML=`<div class="card list">${S.sites.map(s=>`<div class="it"><div class="t"><b>${esc(s.name)} ${siteExpired(s.id)?'<span class="chip bad">종료</span>':''}${s.announce?'<span class="chip ok">안내앱</span>':''}</b><small>${esc(s.type)} · ${esc(s.client)} · PM ${esc(s.pm)} · ~${s.contractEnd} · 코드 ${esc(s.accessCode||'-')}</small></div><button class="btn sm ghost" onclick="editSite('${s.id}')">수정</button></div>`).join('')}</div>
+    <button class="btn" style="margin-top:12px" onclick="editSite('')">＋ 사업장 추가</button><div class="notice">계약종료일이 지나면 해당 사업장 사용자(소장·팀장·갑사 담당자)와 입주민의 접속이 모두 차단됩니다. 접속코드는 안내앱 가입 신청 시 입주민이 입력합니다.</div>`;}
+  if(admTab==='forms'){B.innerHTML=`<div class="card list">${S.forms.map(f=>`<div class="it"><div style="font-size:20px">${catIcon(f.cat)}</div><div class="t"><b>${esc(f.name)} <span class="chip">${esc(f.cat)}</span></b><small>${f.fields.length}개 항목 · 결재선 ${f.line.map(roleName).join('→')}</small></div><button class="btn sm ghost" onclick="editForm('${f.id}')">수정</button></div>`).join('')}</div>
+    <button class="btn" style="margin-top:12px" onclick="editForm('')">＋ 양식 추가</button>
+    <div class="notice"><b>양식 만드는 법</b><br>① 항목(빈칸) 추가 → ② 기존 서식 문구를 붙여넣고 빈칸 자리에 <code>{{항목명}}</code> → ③ 결재선 선택. 숫자 항목에 "통계"를 켜면 대표 대시보드에 자동 합산, "파일" 유형은 PDF/사진 첨부입니다.</div>`;}
+  if(admTab==='company'){B.innerHTML=`<div class="card"><label class="f">회사명</label><input class="in" id="c_name" value="${esc(S.company.name)}"><label class="f">앱/브랜드명</label><input class="in" id="c_brand" value="${esc(S.company.brand)}"><label class="f">사업부명</label><input class="in" id="c_div" value="${esc(S.company.division)}"><label class="f">보고서 하단 문구</label><input class="in" id="c_foot" value="${esc(S.company.footer)}">
+    <h3>역할 표시 이름</h3>${Object.keys(S.roleNames).map(k=>`<label class="f">${k}</label><input class="in" id="rn_${k}" value="${esc(S.roleNames[k])}">`).join('')}<button class="btn" style="margin-top:14px" onclick="saveCompany()">저장</button></div>`;}
+  if(admTab==='system'){B.innerHTML=`<div class="card"><b>Google 스프레드시트 연동 (비공개 DB)</b><div class="mini" style="margin-top:4px">apps-script/Code.gs를 시트에 붙여 넣고 웹앱으로 배포한 URL을 입력하세요. 시트는 공개하지 않아도 됩니다. 첨부 PDF는 같은 계정의 Drive 폴더에 저장됩니다.</div>
+    <label class="f">Apps Script 웹앱 URL</label><input class="in" id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(S.settings.gasUrl)}"><label class="f">비밀키 (Code.gs의 SECRET)</label><input class="in" id="gasKey" value="${esc(S.settings.gasKey)}">
+    <div class="row" style="margin-top:12px"><button class="btn" onclick="saveSys()">저장 후 시트에 업로드</button><button class="btn ghost" onclick="pullSys()">시트에서 불러오기</button></div>
+    <div class="mini" style="margin-top:8px">현재 저장소: <b>${S.settings.gasUrl?'Google 스프레드시트 + 로컬 캐시 (60초마다 동기화)':'로컬(브라우저)만'}</b></div></div>
+    <div class="card"><b>📲 앱 모드 (PWA)</b><div class="mini" style="margin-top:4px">https 주소(예: GitHub Pages, 사내 서버)로 접속하면 "홈 화면에 추가 / 앱 설치"로 앱처럼 실행되고 오프라인 캐시가 동작합니다. 안내앱 링크: <code>resident.html?site=사업장ID</code></div>
+    <div class="row wrap" style="margin-top:8px">${S.sites.filter(s=>s.announce).map(s=>`<button class="btn sm ghost" onclick="copyLink('${s.id}')">${esc(s.name)} 안내앱 링크 복사</button>`).join('')}</div></div>
+    <div class="card"><b>데이터 백업</b><div class="row" style="margin-top:10px"><button class="btn ghost" onclick="exportJson()">JSON 내보내기</button><label class="btn ghost" style="cursor:pointer">JSON 가져오기<input type="file" accept=".json" style="display:none" onchange="importJson(this)"></label></div>
+    <button class="btn bad" style="margin-top:10px" onclick="if(confirm('모든 데이터를 초기 데모 데이터로 되돌립니다. 계속?')){DB.reset();S=DB.data;toast('초기화됨');renderAdmin();}">데모 데이터로 초기화</button></div>`;}
+}
+function setUser(id,st){const u=S.users.find(x=>x.id===id);u.status=st;if(st==='approved')u.approvedAt=today();DB.save();renderAdmin();updateBell();toast(st==='approved'?'승인됨':'권한 해제됨');}
+function copyLink(sid){const u=new URL('resident.html',location.href);u.searchParams.set('site',sid);if(S.settings.gasUrl)u.searchParams.set('gas',S.settings.gasUrl);navigator.clipboard?.writeText(u.href).then(()=>toast('링크 복사됨: '+u.href)).catch(()=>prompt('안내앱 링크',u.href));}
+function saveCompany(){S.company.name=v('c_name');S.company.brand=v('c_brand');S.company.division=v('c_div');S.company.footer=v('c_foot');Object.keys(S.roleNames).forEach(k=>S.roleNames[k]=v('rn_'+k));DB.save();document.getElementById('hdCompany').textContent=S.company.name;document.getElementById('hdTitle').firstChild.textContent=S.company.brand;toast('저장되었습니다');}
+function editSite(id){const s=id?S.sites.find(x=>x.id===id):{name:'',client:'',pm:'',contractEnd:'',type:'오피스',accessCode:'',announce:true};
+  openSheet(`<div class="hd"><h3>${id?'사업장 수정':'사업장 추가'}</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <label class="f">사업장명</label><input class="in" id="s_name" value="${esc(s.name)}"><label class="f">유형</label><select class="in" id="s_type">${['오피스','공동주택','상업시설','공장/물류','복합시설','기타'].map(t=>`<option ${t===s.type?'selected':''}>${t}</option>`).join('')}</select>
+  <label class="f">계약사(갑사)</label><input class="in" id="s_client" value="${esc(s.client)}"><label class="f">계약사 PM 담당자</label><input class="in" id="s_pm" value="${esc(s.pm)}">
+  <label class="f">계약 종료일 (이후 접속 자동 차단)</label><input class="in" type="date" id="s_end" value="${s.contractEnd}">
+  <label class="f">안내앱 접속코드 (입주민 가입 시 입력)</label><input class="in" id="s_code" value="${esc(s.accessCode||'')}" placeholder="예) HB-2026">
+  <div class="check"><input type="checkbox" id="s_ann" ${s.announce?'checked':''}><label for="s_ann">입주민/입주사 안내앱 사용</label></div>
+  <div class="row" style="margin-top:14px"><button class="btn" onclick="saveSite('${id}')">저장</button>${id?`<button class="btn bad" onclick="if(confirm('삭제?')){S.sites=S.sites.filter(x=>x.id!=='${id}');DB.save();closeSheet();renderAdmin();}">삭제</button>`:''}</div>`);}
+function saveSite(id){if(!v('s_name'))return toast('사업장명 필수');let s=id?S.sites.find(x=>x.id===id):null;if(!s){s={id:'s'+uid()};S.sites.push(s);}Object.assign(s,{name:v('s_name'),type:v('s_type'),client:v('s_client'),pm:v('s_pm'),contractEnd:v('s_end'),accessCode:v('s_code'),announce:document.getElementById('s_ann').checked});DB.save();closeSheet();renderAdmin();toast('저장됨');}
+function editUser(id){const u=id?S.users.find(x=>x.id===id):{name:'',role:'staff',site:S.sites[0]?.id||'',title:'',status:'approved'};
+  openSheet(`<div class="hd"><h3>${id?'사용자 수정':'사용자 추가'}</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <label class="f">이름</label><input class="in" id="u_name" value="${esc(u.name)}"><label class="f">연락처</label><input class="in" id="u_phone" value="${esc(u.phone||'')}"><label class="f">직책</label><input class="in" id="u_title" value="${esc(u.title||'')}" placeholder="예) 기계팀장, 계약사 PM">
+  <label class="f">역할</label><select class="in" id="u_role">${Object.keys(S.roleNames).map(r=>`<option value="${r}" ${r===u.role?'selected':''}>${roleName(r)}</option>`).join('')}</select>
+  <label class="f">소속 사업장 (본사는 비움)</label><select class="in" id="u_site"><option value="">본사</option>${S.sites.map(s=>`<option value="${s.id}" ${s.id===u.site?'selected':''}>${esc(s.name)}</option>`).join('')}</select>
+  <label class="f">상태</label><select class="in" id="u_status">${[['approved','승인(사용 중)'],['pending','승인 대기'],['revoked','권한 해제']].map(([a,b])=>`<option value="${a}" ${a===u.status?'selected':''}>${b}</option>`).join('')}</select>
+  <div class="row" style="margin-top:14px"><button class="btn" onclick="saveUser('${id}')">저장</button>${id?`<button class="btn bad" onclick="if(confirm('삭제?')){S.users=S.users.filter(x=>x.id!=='${id}');DB.save();closeSheet();renderAdmin();}">삭제</button>`:''}</div>`);}
+function saveUser(id){if(!v('u_name'))return toast('이름 필수');let u=id?S.users.find(x=>x.id===id):null;if(!u){u={id:'u'+uid()};S.users.push(u);}Object.assign(u,{name:v('u_name'),phone:v('u_phone'),title:v('u_title'),role:v('u_role'),site:v('u_site'),status:v('u_status')});DB.save();closeSheet();renderAdmin();toast('저장됨');}
+let FB=null;
+function editForm(id){FB=id?JSON.parse(JSON.stringify(S.forms.find(x=>x.id===id))):{id:'',name:'',cat:'점검',line:['manager','operator'],fields:[],template:''};drawFB();}
+function drawFB(){const roles=['manager','operator','ceo'];
+  openSheet(`<div class="hd"><h3>${FB.id?'양식 수정':'양식 추가'}</h3><button class="x" onclick="closeSheet()">×</button></div>
+  <label class="f">양식명</label><input class="in" value="${esc(FB.name)}" oninput="FB.name=this.value"><label class="f">분류</label><select class="in" onchange="FB.cat=this.value">${['점검','일보','이슈','구매','민원','서식','안전','기타'].map(c=>`<option ${c===FB.cat?'selected':''}>${c}</option>`).join('')}</select>
+  <h3>입력 항목 (빈칸)</h3><div class="mini">항목명 · 유형 · 통계(숫자 합계) · 필수</div>
+  ${FB.fields.map((x,i)=>`<div class="fieldrow"><input class="in" value="${esc(x.k)}" oninput="FB.fields[${i}].k=this.value" placeholder="항목명"><select class="in" onchange="FB.fields[${i}].t=this.value;drawFB()">${[['text','텍스트'],['number','숫자'],['textarea','서술'],['select','선택'],['check','체크'],['date','날짜'],['file','파일(PDF)']].map(([a,b])=>`<option value="${a}" ${a===x.t?'selected':''}>${b}</option>`).join('')}</select><button class="del" onclick="FB.fields.splice(${i},1);drawFB()">×</button></div>
+    <div class="row" style="margin:2px 0 6px 2px;font-size:12px;gap:14px">${x.t==='select'?`<input class="in" style="margin:0;padding:6px 8px;font-size:12px" value="${esc(x.opt||'')}" oninput="FB.fields[${i}].opt=this.value" placeholder="선택지를 | 로 구분">`:''}${x.t==='number'?`<label><input type="checkbox" ${x.kpi?'checked':''} onchange="FB.fields[${i}].kpi=this.checked?1:0"> 통계</label>`:''}<label><input type="checkbox" ${x.req?'checked':''} onchange="FB.fields[${i}].req=this.checked?1:0"> 필수</label></div>`).join('')}
+  <button class="btn ghost sm" onclick="FB.fields.push({k:'',t:'text'});drawFB()">＋ 항목 추가</button>
+  <h3>본문 양식 (기존 서식 문구 붙여넣기, 빈칸 자리에 {{항목명}})</h3><textarea class="in" style="min-height:130px;font-size:13px" oninput="FB.template=this.value">${esc(FB.template)}</textarea>
+  <div class="row wrap" style="gap:6px;margin-top:6px">${FB.fields.filter(x=>x.k).map(x=>`<button class="chip" onclick="insertTag('${esc(x.k)}')">{{${esc(x.k)}}}</button>`).join('')}</div>
+  <h3>결재선 (순서대로 승인 → 최종 보고)</h3>${roles.map(r=>`<div class="check"><input type="checkbox" id="fb_l_${r}" ${FB.line.includes(r)?'checked':''} onchange="toggleLine('${r}',this.checked)"><label for="fb_l_${r}">${roleName(r)}</label></div>`).join('')}
+  <div class="mini" style="margin-top:6px">현재: 작성자 → ${FB.line.map(roleName).join(' → ')||'(없음)'}</div>
+  <div class="row" style="margin-top:16px"><button class="btn" onclick="saveForm()">양식 저장</button>${FB.id?`<button class="btn bad" onclick="if(confirm('양식 삭제?')){S.forms=S.forms.filter(x=>x.id!=='${FB.id}');DB.save();closeSheet();renderAdmin();}">삭제</button>`:''}</div>`);}
+function insertTag(k){const ta=document.querySelector('#sheet textarea');const p=ta.selectionStart||ta.value.length;ta.value=ta.value.slice(0,p)+'{{'+k+'}}'+ta.value.slice(p);FB.template=ta.value;ta.focus();}
+function toggleLine(r,on){const order=['manager','operator','ceo'];FB.line=order.filter(x=>x===r?on:FB.line.includes(x));drawFB();}
+function saveForm(){if(!FB.name.trim())return toast('양식명 필수');FB.fields=FB.fields.filter(x=>x.k.trim());if(!FB.fields.length)return toast('항목을 1개 이상 추가');if(!FB.line.length)return toast('결재선을 1명 이상 선택');
+  if(!FB.id){FB.id='f'+uid();S.forms.push(FB);}else{S.forms[S.forms.findIndex(x=>x.id===FB.id)]=FB;}DB.save();closeSheet();renderAdmin();toast('양식 저장됨');}
+async function saveSys(){S.settings.gasUrl=v('gasUrl');S.settings.gasKey=v('gasKey');DB.save(false);await DB.push();fillLogin();toast(S.settings.gasUrl?'시트에 업로드 요청됨':'로컬 모드로 저장');renderAdmin();}
+async function pullSys(){if(await DB.pull()){S=DB.data;toast('시트 데이터를 불러왔습니다');renderAdmin();}}
+function exportJson(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(S,null,1));a.download='building-manager-backup-'+today()+'.json';a.click();}
+function importJson(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.forms||!d.users)throw 0;d.settings=d.settings||S.settings;DB.data=d;S=d;DB.load;DB.save();toast('가져오기 완료');renderAdmin();}catch(e){toast('올바른 백업 파일이 아닙니다');}};r.readAsText(f);}
+
+/* ---------- PWA · 동기화 · 알림 ---------- */
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.getElementById('installBtn').style.display='';});
+function installApp(){if(!deferredInstall)return;deferredInstall.prompt();deferredInstall=null;document.getElementById('installBtn').style.display='none';}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.getElementById('installHint').innerHTML='✅ 앱 모드로 실행 중입니다.';
+let lastTodo=null;
+setInterval(async()=>{if(!me||modalOpen())return;if(S.settings.gasUrl){if(await DB.pull()){S=DB.data;refresh();}}
+  const n=myTodo().length;if(lastTodo!==null&&n>lastTodo)notify(S.company.brand,`처리할 항목 ${n}건`);lastTodo=n;},60000);
+window.addEventListener('storage',e=>{if(e.key===LS_KEY&&!modalOpen()){S=DB.load();if(me)refresh();}});
+
+/* ---------- boot ---------- */
+fillLogin();
+(function(){const id=localStorage.getItem('bm.me');if(id&&user(id).id){document.getElementById('loginUser').value=id;doLogin();}})();
+</script>
 </body>
-
 </html>

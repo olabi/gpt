@@ -46,6 +46,7 @@
     <div id="drop" class="drop">여기에 파일을 끌어다 놓거나 클릭해서 선택<input id="file" type="file" accept=".xlsx,.xlsm,.xls,.csv,.txt" class="hidden"></div>
     <div class="row" style="margin-top:12px">
       <label class="f">시트<select id="sheet" disabled></select></label>
+      <label class="f">끝에서 뺄 행 수 (합계·요약 행)<input id="dropTail" type="number" value="0" min="0" max="20"></label>
       <label class="f">UID 키 (같은 키를 쓰면 파일이 달라도 같은 UID)<input id="uidKey" type="text" placeholder="예: 팀에서 정한 비밀 단어" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:14px;width:220px"></label>
       <label class="f">희귀값 기준 (가짜(분포) 방식에서 이 횟수 미만이면 형식만 흉내)<input id="minCount" type="number" value="5" min="1"></label>
     </div>
@@ -271,7 +272,28 @@ function generate(prof, n, seed) {
 
 // ---------------- 화면 ----------------
 const $ = id => document.getElementById(id);
-let WB = null, SRC = null, HEAD = [], DATA = [], PROF = null, FAKE = null, FNAME = "data";
+let WB = null, SRC = null, HEAD = [], DATA = [], ALL = [], PROF = null, FAKE = null, FNAME = "data", TAIL_MSG = "";
+// 맨 끝 합계·요약 행 찾기: 합계/총계/소계/요약/Total 글자가 있거나, 숫자 열 값이 위 행들의 합과 같은 행
+const SUM_WORD = /^(합\s*계|총\s*계|소\s*계|누\s*계|요\s*약|계|평\s*균|total|grand\s*total|subtotal|sum|average)$/i;
+function isSummaryRow(rows, k) {
+  const r = rows[k];
+  if (r.some(v => SUM_WORD.test(String(v).trim()))) return "글자";
+  const above = rows.slice(0, k); if (above.length < 3) return false;
+  let hit = 0, tried = 0;
+  r.forEach((v, j) => {
+    const t = String(v).trim().replace(/,/g, ""); if (!/^-?\d+(\.\d+)?$/.test(t)) return;
+    const col = above.map(x => String(x[j]).trim().replace(/,/g, "")).filter(x => /^-?\d+(\.\d+)?$/.test(x)).map(Number);
+    if (col.length < 3) return; tried++;
+    const sum = col.reduce((a, b) => a + b, 0), x = +t;
+    if (sum !== 0 && Math.abs(x - sum) <= Math.abs(sum) * 0.005) hit++;
+  });
+  return tried && hit >= 1 && hit / tried >= 0.5 ? "합계값" : false;
+}
+function detectTail(rows) {
+  let k = 0; const why = [];
+  while (k < 3 && rows.length - k > 3) { const w = isSummaryRow(rows.slice(0, rows.length - k), rows.length - k - 1); if (!w) break; why.push(w); k++; }
+  return [k, why];
+}
 const KIND = { number: "숫자", datetime: "날짜", category: "분류", pattern: "형식", empty: "비어 있음" };
 const MODES = [["keep", "실제값 유지"], ["partial", "부분 마스킹"], ["uid", "UID 치환"], ["mask", "형식만"], ["fake", "가짜(분포)"]];
 let PII = [];
@@ -289,14 +311,23 @@ async function loadFile(f) {
 function loadSheet() {
   const ws = WB.Sheets[$("sheet").value];
   const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "", blankrows: false }).map(r => r.map(v => String(v)));
-  HEAD = (aoa[0] || []).map((h, i) => h || `열${i + 1}`); DATA = aoa.slice(1).map(r => HEAD.map((_, i) => r[i] ?? ""));
+  HEAD = (aoa[0] || []).map((h, i) => h || `열${i + 1}`); ALL = aoa.slice(1).map(r => HEAD.map((_, i) => r[i] ?? ""));
   SRC.sheet = $("sheet").value;
-  $("srcInfo").textContent = `${DATA.length.toLocaleString()}행 × ${HEAD.length}열 읽음 (${SRC.type === "csv" ? "CSV, " + SRC.encoding : "엑셀, 시트 " + SRC.sheet})`;
+  const [k, why] = detectTail(ALL);
+  $("dropTail").value = k;
+  TAIL_MSG = k ? ` · 맨 끝 ${k}행을 합계·요약 행으로 보고 뺐습니다(${why.join(", ")} 기준). 아니면 '끝에서 뺄 행 수'를 0으로 바꾸세요.` : "";
+  PROF = null; applyTail();
+}
+function applyTail() {
+  const k = Math.max(0, Math.min(+$("dropTail").value || 0, ALL.length - 1));
+  DATA = ALL.slice(0, ALL.length - k);
+  $("srcInfo").textContent = `${ALL.length.toLocaleString()}행 × ${HEAD.length}열 읽음 (${SRC.type === "csv" ? "CSV, " + SRC.encoding : "엑셀, 시트 " + SRC.sheet})` + (k ? ` → 끝 ${k}행 제외, ${DATA.length.toLocaleString()}행 사용` : "") + (k && k === +$("dropTail").value ? TAIL_MSG : "");
   $("rows").value = DATA.length;
+  const prevModes = PROF && PROF.columns.length === HEAD.length && TAIL_MSG === "" ? PROF.columns.map(c => c && c.mode) : null;
   PROF = { source: SRC, rows: DATA.length, dup_rate: 0, columns: HEAD.map(() => null) };
   const seen = counts(DATA.map(r => JSON.stringify(r))); let dup = 0; for (const v of seen.values()) dup += v - 1; PROF.dup_rate = DATA.length ? dup / DATA.length : 0;
   PII = HEAD.map((h, i) => looksPii(h, DATA.map(r => r[i].trim()).filter(v => !NULL_TOKENS.has(v))));
-  HEAD.forEach((_, i) => reprofile(i, PII[i] ? "partial" : "keep"));
+  HEAD.forEach((_, i) => reprofile(i, (prevModes && prevModes[i]) || (PII[i] ? "partial" : "keep")));
   renderCols(); $("colCard").classList.remove("hidden"); $("genCard").classList.remove("hidden"); $("out").classList.add("hidden");
 }
 function reprofile(i, mode) { PROF.columns[i] = profileColumn(DATA.map(r => r[i]), HEAD[i], mode, +$("minCount").value || 5); }
@@ -323,6 +354,7 @@ $("file").onchange = e => e.target.files[0] && loadFile(e.target.files[0]);
 ["dragleave", "drop"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.remove("on"); }));
 $("drop").addEventListener("drop", e => e.dataTransfer.files[0] && loadFile(e.dataTransfer.files[0]));
 $("sheet").onchange = loadSheet;
+$("dropTail").onchange = () => { if (ALL.length) { TAIL_MSG = ""; applyTail(); } };
 $("uidKey").onchange = () => { if (PROF) { PROF.columns.forEach((c, i) => { if (c.mode === "uid") reprofile(i, "uid"); }); renderCols(); $("out").classList.add("hidden"); } };
 $("minCount").onchange = () => { if (PROF) { PROF.columns.forEach((c, i) => reprofile(i, c.mode)); renderCols(); } };
 

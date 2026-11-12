@@ -28,7 +28,7 @@
   th { background:#fafaf8; font-weight:600; }
   .scroll { overflow:auto; max-height:420px; }
   .tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; background:#eef0f4; }
-  .k-number{background:#e6f2ea} .k-datetime{background:#e9eefc} .k-category{background:#fbf0e3} .k-pattern{background:#f1e9f7} .k-empty{background:#eee}
+  .k-number{background:#e6f2ea} .k-datetime{background:#e9eefc} .k-category{background:#fbf0e3} .k-pattern{background:#f1e9f7} .k-empty{background:#eee} .k-dropped{background:#f6dede} tr.dropped td{color:#aaa}
   .note { font-size:12px; color:var(--sub); margin-top:10px; line-height:1.6; }
   .warn { color:var(--warn); }
   .hidden { display:none; }
@@ -61,7 +61,8 @@
       <b>부분 마스킹</b>: 앞부분만 남기고 가림 (개인정보로 보이면 자동 선택) &nbsp;|&nbsp;
       <b>UID 치환</b>: 값마다 고정된 UID(예: U3K9Q2ZA)로 바꿈. 같은 값·같은 UID 키면 다른 파일에서도 같은 UID라 파일끼리 연결 가능 &nbsp;|&nbsp;
       <b>형식만</b>: 내용을 지우고 글자 형태만 남김 &nbsp;|&nbsp;
-      <b>가짜(분포)</b>: 숫자·날짜·분류를 판별해 분포만 흉내 낸 가짜 값<br>
+      <b>가짜(분포)</b>: 숫자·날짜·분류를 판별해 분포만 흉내 낸 가짜 값 &nbsp;|&nbsp;
+      <b>컬럼 삭제</b>: 결과 파일과 profile.json에서 이 컬럼을 아예 뺌 (값을 저장하지 않음). 값이 전부 빈 컬럼은 자동 선택<br>
       <span class="warn">개인정보 자동 판별은 열 이름과 값 모양으로 추정합니다. 이름·아이디가 든 컬럼이 '실제값 유지'로 남아 있지 않은지 꼭 확인하세요. '실제값 유지' 값은 결과 파일과 profile.json에 그대로 들어갑니다.</span>
     </p>
   </section>
@@ -200,6 +201,7 @@ function profileColumn(raw, name, mode, minCount) {
     null_tokens: freq(stripped.filter((_, i) => isNull[i]), 10),
     space_rate: raw.filter((s, i) => !isNull[i] && s !== stripped[i]).length / n };
   const vals = stripped.filter((_, i) => !isNull[i]);
+  if (mode === "drop") return Object.assign(col, { kind: "dropped", null_tokens: {}, space_rate: 0 });
   if (!vals.length) return Object.assign(col, { kind: "empty" });
   const nuniq = new Set(vals).size;
   const asPattern = () => Object.assign(col, { kind: "pattern", masks: freq(vals.map(mask), 50) });
@@ -264,7 +266,7 @@ function genValue(c) {
 }
 function generate(prof, n, seed) {
   R = mulberry32(seed);
-  const cols = prof.columns.map(c => Object.assign({}, c));
+  const cols = prof.columns.filter(c => c.mode !== "drop").map(c => Object.assign({}, c));
   const rows = []; for (let i = 0; i < n; i++) rows.push(cols.map(genValue));
   const nd = Math.floor(n * prof.dup_rate); for (let k = 0; k < nd; k++) rows[ri(0, n - 1)] = rows[ri(0, n - 1)].slice();
   R = Math.random; return rows;
@@ -272,6 +274,7 @@ function generate(prof, n, seed) {
 
 // ---------------- 화면 ----------------
 const $ = id => document.getElementById(id);
+let OUT_HEAD = [];
 let WB = null, SRC = null, HEAD = [], DATA = [], ALL = [], PROF = null, FAKE = null, FNAME = "data", TAIL_MSG = "";
 // 맨 끝 합계·요약 행 찾기: 합계/총계/소계/요약/Total 글자가 있거나, 숫자 열 값이 위 행들의 합과 같은 행
 const SUM_WORD = /^(합\s*계|총\s*계|소\s*계|누\s*계|요\s*약|계|평\s*균|total|grand\s*total|subtotal|sum|average)$/i;
@@ -294,8 +297,8 @@ function detectTail(rows) {
   while (k < 3 && rows.length - k > 3) { const w = isSummaryRow(rows.slice(0, rows.length - k), rows.length - k - 1); if (!w) break; why.push(w); k++; }
   return [k, why];
 }
-const KIND = { number: "숫자", datetime: "날짜", category: "분류", pattern: "형식", empty: "비어 있음" };
-const MODES = [["keep", "실제값 유지"], ["partial", "부분 마스킹"], ["uid", "UID 치환"], ["mask", "형식만"], ["fake", "가짜(분포)"]];
+const KIND = { number: "숫자", datetime: "날짜", category: "분류", pattern: "형식", empty: "비어 있음", dropped: "삭제" };
+const MODES = [["keep", "실제값 유지"], ["partial", "부분 마스킹"], ["uid", "UID 치환"], ["mask", "형식만"], ["fake", "가짜(분포)"], ["drop", "컬럼 삭제"]];
 let PII = [];
 
 function decodeText(buf) { try { return [new TextDecoder("utf-8", { fatal: true }).decode(buf).replace(/^﻿/, ""), "utf-8"]; } catch { return [new TextDecoder("euc-kr").decode(buf), "euc-kr"]; } }
@@ -327,7 +330,8 @@ function applyTail() {
   PROF = { source: SRC, rows: DATA.length, dup_rate: 0, columns: HEAD.map(() => null) };
   const seen = counts(DATA.map(r => JSON.stringify(r))); let dup = 0; for (const v of seen.values()) dup += v - 1; PROF.dup_rate = DATA.length ? dup / DATA.length : 0;
   PII = HEAD.map((h, i) => looksPii(h, DATA.map(r => r[i].trim()).filter(v => !NULL_TOKENS.has(v))));
-  HEAD.forEach((_, i) => reprofile(i, (prevModes && prevModes[i]) || (PII[i] ? "partial" : "keep")));
+  const allEmpty = HEAD.map((_, i) => DATA.length > 0 && DATA.every(r => NULL_TOKENS.has(r[i].trim()))); // 100% 빈값 → 기본 '컬럼 삭제'
+  HEAD.forEach((_, i) => reprofile(i, (prevModes && prevModes[i]) || (allEmpty[i] ? "drop" : PII[i] ? "partial" : "keep")));
   renderCols(); $("colCard").classList.remove("hidden"); $("genCard").classList.remove("hidden"); $("out").classList.add("hidden");
 }
 function reprofile(i, mode) { PROF.columns[i] = profileColumn(DATA.map(r => r[i]), HEAD[i], mode, +$("minCount").value || 5); }
@@ -341,7 +345,7 @@ function sample(c) {
 const clip = t => t.length > 60 ? t.slice(0, 60) + " …" : t;
 function renderCols() {
   $("colTable").innerHTML = "<tr><th>컬럼</th><th>판별</th><th>빈값</th><th>저장되는 패턴</th><th>처리 방식</th></tr>" + PROF.columns.map((c, i) =>
-    `<tr><td>${escapeHtml(c.name)}</td><td><span class="tag k-${c.kind}">${KIND[c.kind]}</span>${PII[i] ? ' <span class="tag warn">개인정보 추정</span>' : ""}</td><td>${(c.null_rate * 100).toFixed(1)}%</td><td class="vis">${escapeHtml(clip(sample(c)))}</td>
+    `<tr class="${c.mode === "drop" ? "dropped" : ""}"><td>${escapeHtml(c.name)}</td><td><span class="tag k-${c.kind}">${KIND[c.kind]}</span>${PII[i] ? ' <span class="tag warn">개인정보 추정</span>' : ""}</td><td>${(c.null_rate * 100).toFixed(1)}%</td><td class="vis">${escapeHtml(clip(sample(c)))}</td>
      <td><select data-i="${i}">${MODES.map(([v, t]) => `<option value="${v}" ${c.mode === v ? "selected" : ""}>${t}</option>`).join("")}</select></td></tr>`).join("");
   $("colTable").querySelectorAll("select").forEach(s => s.onchange = () => { reprofile(+s.dataset.i, s.value); renderCols(); $("out").classList.add("hidden"); });
 }
@@ -359,20 +363,22 @@ $("uidKey").onchange = () => { if (PROF) { PROF.columns.forEach((c, i) => { if (
 $("minCount").onchange = () => { if (PROF) { PROF.columns.forEach((c, i) => reprofile(i, c.mode)); renderCols(); } };
 
 $("genBtn").onclick = () => {
+  OUT_HEAD = HEAD.filter((_, i) => PROF.columns[i].mode !== "drop");
+  if (!OUT_HEAD.length) { alert("남은 컬럼이 없습니다. 하나 이상은 '컬럼 삭제'가 아닌 방식으로 두세요."); return; }
   const n = Math.max(1, +$("rows").value || PROF.rows);
   FAKE = generate(PROF, n, +$("seed").value || 0);
-  $("preview").innerHTML = "<tr>" + HEAD.map(h => `<th>${escapeHtml(h)}</th>`).join("") + "</tr>" +
+  $("preview").innerHTML = "<tr>" + OUT_HEAD.map(h => `<th>${escapeHtml(h)}</th>`).join("") + "</tr>" +
     FAKE.slice(0, 20).map(r => "<tr>" + r.map(v => `<td class="${v !== v.trim() ? "sp" : ""}">${escapeHtml(v)}</td>`).join("") + "</tr>").join("");
   $("out").classList.remove("hidden");
 };
 $("dlXlsx").onclick = () => {
-  const ws = XLSX.utils.aoa_to_sheet([HEAD, ...FAKE]); const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([OUT_HEAD, ...FAKE]); const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, (SRC.sheet || "Sheet1").slice(0, 31));
   download(new Blob([XLSX.write(wb, { type: "array", bookType: "xlsx" })], { type: "application/octet-stream" }), `fake_${FNAME}.xlsx`);
 };
 $("dlCsv").onclick = () => {
   const q = v => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-  const text = [HEAD, ...FAKE].map(r => r.map(q).join(",")).join("\r\n");
+  const text = [OUT_HEAD, ...FAKE].map(r => r.map(q).join(",")).join("\r\n");
   download(new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" }), `fake_${FNAME}.csv`);
 };
 $("dlProf").onclick = () => {

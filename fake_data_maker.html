@@ -39,14 +39,15 @@
 <body>
 <main>
   <h1>가짜 데이터 생성기</h1>
-  <p class="lead">진짜 데이터의 패턴만 뽑아 똑같이 지저분한 가짜 데이터를 만듭니다. 파일은 이 브라우저 안에서만 처리되고, 페이지 보안 설정으로 외부 전송이 차단되어 있습니다.</p>
+  <p class="lead">기본은 실제 값을 유지하고, 개인정보로 보이는 컬럼(이름·학번·사번·아이디·이메일·전화 등)만 자동으로 부분 마스킹합니다(홍*동, 2024-3****, ab***@snu.ac.kr). 컬럼마다 형식만·가짜(분포)로 바꿀 수 있습니다. 파일은 이 브라우저 안에서만 처리되고, 페이지 보안 설정으로 외부 전송이 차단되어 있습니다.</p>
 
   <section class="card">
     <h2>1. 원본 파일 선택 (.xlsx / .csv)</h2>
     <div id="drop" class="drop">여기에 파일을 끌어다 놓거나 클릭해서 선택<input id="file" type="file" accept=".xlsx,.xlsm,.xls,.csv,.txt" class="hidden"></div>
     <div class="row" style="margin-top:12px">
       <label class="f">시트<select id="sheet" disabled></select></label>
-      <label class="f">희귀값 기준 (이 횟수 미만이면 형식만 흉내)<input id="minCount" type="number" value="5" min="1"></label>
+      <label class="f">UID 키 (같은 키를 쓰면 파일이 달라도 같은 UID)<input id="uidKey" type="text" placeholder="예: 팀에서 정한 비밀 단어" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:14px;width:220px"></label>
+      <label class="f">희귀값 기준 (가짜(분포) 방식에서 이 횟수 미만이면 형식만 흉내)<input id="minCount" type="number" value="5" min="1"></label>
     </div>
     <div id="srcInfo" class="note"></div>
   </section>
@@ -55,10 +56,12 @@
     <h2>2. 컬럼별 처리 방식 확인</h2>
     <div class="scroll"><table id="colTable"></table></div>
     <p class="note">
-      <b>자동</b>: 숫자·날짜·분류·형식 중 자동 판별 &nbsp;|&nbsp;
-      <b>형식만</b>: 내용을 지우고 글자 형태만 남김 (이름·학번·아이디·이메일 등 개인정보는 꼭 이걸로) &nbsp;|&nbsp;
-      <b>실제값 유지</b>: 분류값을 그대로 씀 (메뉴명처럼 민감하지 않은 것만)<br>
-      <span class="warn">'분류' 컬럼은 기준 횟수 이상 나온 실제 값이 그대로 들어갑니다. 민감하면 '형식만'으로 바꾸세요.</span>
+      <b>실제값 유지</b>(기본): 실제 값을 그대로 씀 &nbsp;|&nbsp;
+      <b>부분 마스킹</b>: 앞부분만 남기고 가림 (개인정보로 보이면 자동 선택) &nbsp;|&nbsp;
+      <b>UID 치환</b>: 값마다 고정된 UID(예: U3K9Q2ZA)로 바꿈. 같은 값·같은 UID 키면 다른 파일에서도 같은 UID라 파일끼리 연결 가능 &nbsp;|&nbsp;
+      <b>형식만</b>: 내용을 지우고 글자 형태만 남김 &nbsp;|&nbsp;
+      <b>가짜(분포)</b>: 숫자·날짜·분류를 판별해 분포만 흉내 낸 가짜 값<br>
+      <span class="warn">개인정보 자동 판별은 열 이름과 값 모양으로 추정합니다. 이름·아이디가 든 컬럼이 '실제값 유지'로 남아 있지 않은지 꼭 확인하세요. '실제값 유지' 값은 결과 파일과 profile.json에 그대로 들어갑니다.</span>
     </p>
   </section>
 
@@ -76,7 +79,7 @@
         <button id="dlProf" class="ghost">패턴(profile.json) 받기</button>
       </div>
       <div class="scroll"><table id="preview"></table></div>
-      <p class="note">미리보기 20행. 노란 칸은 앞뒤 공백이 들어간 값입니다. 컬럼 사이의 관계(예: 특정 메뉴는 오전에 몰림)는 재현하지 않습니다.</p>
+      <p class="note">미리보기 20행. 노란 칸은 앞뒤 공백이 들어간 값입니다. 값은 컬럼마다 따로 뽑으므로 행 안의 조합(예: 특정 강좌의 수강생 수)은 원본과 다릅니다.</p>
     </div>
   </section>
 </main>
@@ -150,6 +153,43 @@ const numStyle = s => `${s.includes(",") ? "comma" : "plain"}:${s.includes(".") 
 function renderNum(v, st) { const [k, d] = st.split(":"); const n = +d; return k === "comma" ? v.toLocaleString("en-US", { minimumFractionDigits: n, maximumFractionDigits: n }) : v.toFixed(n); }
 function quantiles(arr) { const a = [...arr].sort((x, y) => x - y), q = []; for (let i = 0; i <= 100; i++) { const p = (a.length - 1) * i / 100, lo = Math.floor(p), hi = Math.ceil(p); q.push(a[lo] + (a[hi] - a[lo]) * (p - lo)); } return q; }
 
+// ---------------- 개인정보 판별 · 부분 마스킹 ----------------
+const PII_NAME_RE = /이름|성명|학번|사번|교번|아이디|계정|이메일|e-?mail|메일|전화|연락처|휴대|핸드폰|주민|생년월일|집주소|자택|거주지|운영자|작성자|담당자|신청자|수강자|학생명|교수진|교수자|교수명|강사|user|name|phone|login/i;
+const NOT_PII_NAME_RE = /강좌명|과목명|기관명|부서명|메뉴명|파일명|시트명|course|class/i;
+const PII_VALUE_RES = [/^[\w.+-]+@[\w-]+(\.[\w-]+)+$/, /^0\d{1,2}-?\d{3,4}-?\d{4}$/, /^\d{6}-?[1-4]\d{6}$/, /^(19|20)\d{2}-\d{4,5}$/, /^[A-Z]\d{6}$/];
+const TOKEN_RE = /[^\s,;\/|\[\]"'()]+/g;
+function looksPii(name, vals) {
+  if (NOT_PII_NAME_RE.test(name) && !/운영자|담당자|작성자/.test(name)) return false;
+  const smp = vals.slice(0, 500);
+  if (smp.length && smp.filter(v => /^https?:\/\//.test(v)).length / smp.length >= 0.5) return false; // 링크(URL)
+  if (PII_NAME_RE.test(name)) return true;
+  const toks = smp.flatMap(v => v.match(TOKEN_RE) || []);
+  if (!toks.length) return false;
+  return toks.filter(t => PII_VALUE_RES.some(r => r.test(t))).length / toks.length >= 0.5;
+}
+function maskToken(t) {
+  if (/^[\w.+-]+@[\w.-]+$/.test(t)) { const [l, d] = t.split("@"); return l.slice(0, 2) + "*".repeat(Math.max(3, l.length - 2)) + "@" + d; }
+  if (/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(t)) return t.slice(0, 3) + t.slice(3, -4).replace(/\d/g, "*") + t.slice(-4);
+  if (/^\d{6}-?[1-4]\d{6}$/.test(t)) { const k = t.includes("-") ? 8 : 7; return t.slice(0, k) + "*".repeat(t.length - k); }
+  if (/^[가-힣]{2,4}$/.test(t)) return t.length === 2 ? t[0] + "*" : t[0] + "*".repeat(t.length - 2) + t[t.length - 1];
+  if (/^[A-Za-z]{2,}$/.test(t)) return t[0] + "*".repeat(t.length - 1);
+  if (t.length <= 1) return t;
+  const isAN = c => /[\p{L}\p{N}]/u.test(c);
+  const chars = [...t], n = chars.filter(isAN).length, keep = Math.ceil(n / 2); let seen = 0;
+  return chars.map(c => isAN(c) ? (++seen <= keep ? c : "*") : c).join("");
+}
+const partialMask = v => v.replace(TOKEN_RE, maskToken);
+// UID 치환: 같은 값 + 같은 키 → 항상 같은 UID (파일이 달라도 연결 가능). cyrb53 해시, 파이썬판과 결과 동일
+function cyrb53(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+const uidOf = (t, key) => "U" + cyrb53(key + "\u0000" + t).toString(36).toUpperCase().padStart(11, "0").slice(-8);
+const uidMask = (v, key) => v.replace(TOKEN_RE, t => uidOf(t, key));
+
 // ---------------- 프로파일 ----------------
 function profileColumn(raw, name, mode, minCount) {
   const stripped = raw.map(s => s.trim());
@@ -163,8 +203,13 @@ function profileColumn(raw, name, mode, minCount) {
   const nuniq = new Set(vals).size;
   const asPattern = () => Object.assign(col, { kind: "pattern", masks: freq(vals.map(mask), 50) });
   if (mode === "mask") return asPattern();
+  if (mode === "keep" || mode === "partial" || mode === "uid") {
+    const vv = mode === "partial" ? vals.map(partialMask) : mode === "uid" ? vals.map(v => uidMask(v, $("uidKey").value)) : vals;
+    const c = counts(vv);
+    return Object.assign(col, { kind: "category", values: Object.fromEntries([...c.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, v / vv.length])), rare_rate: 0, rare_masks: {} });
+  }
 
-  if (mode !== "keep") {
+  {
     const okN = vals.map(v => NUM_RE.test(v));
     if (okN.filter(Boolean).length / vals.length >= 0.8) {
       const nv = vals.filter((_, i) => okN[i]);
@@ -184,8 +229,8 @@ function profileColumn(raw, name, mode, minCount) {
         junk_masks: freq(vals.filter((_, i) => !pd[i]).map(mask), 20) });
     }
   }
-  if (mode === "keep" || nuniq <= 50 || nuniq / vals.length < 0.05) {
-    const c = counts(vals), th = mode === "keep" ? 1 : minCount;
+  if (nuniq <= 50 || nuniq / vals.length < 0.05) {
+    const c = counts(vals), th = minCount;
     const common = [...c.entries()].filter(([, k]) => k >= th);
     const commonSet = new Set(common.map(x => x[0]));
     const rare = vals.filter(v => !commonSet.has(v));
@@ -228,6 +273,8 @@ function generate(prof, n, seed) {
 const $ = id => document.getElementById(id);
 let WB = null, SRC = null, HEAD = [], DATA = [], PROF = null, FAKE = null, FNAME = "data";
 const KIND = { number: "숫자", datetime: "날짜", category: "분류", pattern: "형식", empty: "비어 있음" };
+const MODES = [["keep", "실제값 유지"], ["partial", "부분 마스킹"], ["uid", "UID 치환"], ["mask", "형식만"], ["fake", "가짜(분포)"]];
+let PII = [];
 
 function decodeText(buf) { try { return [new TextDecoder("utf-8", { fatal: true }).decode(buf).replace(/^﻿/, ""), "utf-8"]; } catch { return [new TextDecoder("euc-kr").decode(buf), "euc-kr"]; } }
 
@@ -248,21 +295,23 @@ function loadSheet() {
   $("rows").value = DATA.length;
   PROF = { source: SRC, rows: DATA.length, dup_rate: 0, columns: HEAD.map(() => null) };
   const seen = counts(DATA.map(r => JSON.stringify(r))); let dup = 0; for (const v of seen.values()) dup += v - 1; PROF.dup_rate = DATA.length ? dup / DATA.length : 0;
-  HEAD.forEach((_, i) => reprofile(i, "auto"));
+  PII = HEAD.map((h, i) => looksPii(h, DATA.map(r => r[i].trim()).filter(v => !NULL_TOKENS.has(v))));
+  HEAD.forEach((_, i) => reprofile(i, PII[i] ? "partial" : "keep"));
   renderCols(); $("colCard").classList.remove("hidden"); $("genCard").classList.remove("hidden"); $("out").classList.add("hidden");
 }
 function reprofile(i, mode) { PROF.columns[i] = profileColumn(DATA.map(r => r[i]), HEAD[i], mode, +$("minCount").value || 5); }
 function sample(c) {
-  if (c.kind === "category") return Object.keys(c.values).slice(0, 4).join(", ") + (Object.keys(c.values).length > 4 ? " …" : "");
+  if (c.kind === "category") return (c.mode === "keep" || c.mode === "partial" || c.mode === "uid" ? `${Object.keys(c.values).length.toLocaleString()}종: ` : "") + Object.keys(c.values).slice(0, 4).join(", ") + (Object.keys(c.values).length > 4 ? " …" : "");
   if (c.kind === "pattern") return Object.keys(c.masks).slice(0, 2).join(", ");
   if (c.kind === "datetime") return `${c.min.slice(0, 10)} ~ ${c.max.slice(0, 10)}`;
   if (c.kind === "number") return `${+c.quantiles[0].toFixed(2)} ~ ${+c.quantiles[100].toFixed(2)}`;
   return "";
 }
+const clip = t => t.length > 60 ? t.slice(0, 60) + " …" : t;
 function renderCols() {
   $("colTable").innerHTML = "<tr><th>컬럼</th><th>판별</th><th>빈값</th><th>저장되는 패턴</th><th>처리 방식</th></tr>" + PROF.columns.map((c, i) =>
-    `<tr><td>${escapeHtml(c.name)}</td><td><span class="tag k-${c.kind}">${KIND[c.kind]}</span></td><td>${(c.null_rate * 100).toFixed(1)}%</td><td class="vis">${escapeHtml(sample(c))}</td>
-     <td><select data-i="${i}">${[["auto", "자동"], ["mask", "형식만"], ["keep", "실제값 유지"]].map(([v, t]) => `<option value="${v}" ${c.mode === v ? "selected" : ""}>${t}</option>`).join("")}</select></td></tr>`).join("");
+    `<tr><td>${escapeHtml(c.name)}</td><td><span class="tag k-${c.kind}">${KIND[c.kind]}</span>${PII[i] ? ' <span class="tag warn">개인정보 추정</span>' : ""}</td><td>${(c.null_rate * 100).toFixed(1)}%</td><td class="vis">${escapeHtml(clip(sample(c)))}</td>
+     <td><select data-i="${i}">${MODES.map(([v, t]) => `<option value="${v}" ${c.mode === v ? "selected" : ""}>${t}</option>`).join("")}</select></td></tr>`).join("");
   $("colTable").querySelectorAll("select").forEach(s => s.onchange = () => { reprofile(+s.dataset.i, s.value); renderCols(); $("out").classList.add("hidden"); });
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
@@ -274,6 +323,7 @@ $("file").onchange = e => e.target.files[0] && loadFile(e.target.files[0]);
 ["dragleave", "drop"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.remove("on"); }));
 $("drop").addEventListener("drop", e => e.dataTransfer.files[0] && loadFile(e.dataTransfer.files[0]));
 $("sheet").onchange = loadSheet;
+$("uidKey").onchange = () => { if (PROF) { PROF.columns.forEach((c, i) => { if (c.mode === "uid") reprofile(i, "uid"); }); renderCols(); $("out").classList.add("hidden"); } };
 $("minCount").onchange = () => { if (PROF) { PROF.columns.forEach((c, i) => reprofile(i, c.mode)); renderCols(); } };
 
 $("genBtn").onclick = () => {
@@ -294,7 +344,7 @@ $("dlCsv").onclick = () => {
   download(new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" }), `fake_${FNAME}.csv`);
 };
 $("dlProf").onclick = () => {
-  const p = Object.assign({}, PROF, { created: new Date().toISOString(), columns: PROF.columns.map(c => { const o = Object.assign({}, c); delete o._days; delete o._list; return o; }) });
+  const p = Object.assign({}, PROF, { created: new Date().toISOString(), columns: PROF.columns.map(c => { const o = Object.assign({}, c); delete o._days; delete o._list; return o; }) }); // UID 키는 저장하지 않음
   download(new Blob([JSON.stringify(p, null, 2)], { type: "application/json" }), `profile_${FNAME}.json`);
 };
 </script>

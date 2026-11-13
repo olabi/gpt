@@ -160,9 +160,12 @@ const PII_NAME_RE = /이름|성명|학번|사번|교번|아이디|계정|이메�
 const NOT_PII_NAME_RE = /강좌명|과목명|기관명|부서명|메뉴명|파일명|시트명|course|class/i;
 const PII_VALUE_RES = [/^[\w.+-]+@[\w-]+(\.[\w-]+)+$/, /^0\d{1,2}-?\d{3,4}-?\d{4}$/, /^\d{6}-?[1-4]\d{6}$/, /^(19|20)\d{2}-\d{4,5}$/, /^[A-Z]\d{6}$/];
 const TOKEN_RE = /[^\s,;\/|\[\]"'()]+/g;
+// 인원수·합계 같은 숫자 열 이름 (예: 신청자 수, 이수자수, 학생수, 합계, 이수율). '교수'는 해당 없음
+const COUNT_NAME_RE = /(자\s*수|생\s*수|원\s*수|건\s*수|\s수|인원|합계|비율|율|금액|횟수|점수|count|total|sum|rate)\s*(\(.*\))?$/i;
 function looksPii(name, vals) {
   if (NOT_PII_NAME_RE.test(name) && !/운영자|담당자|작성자/.test(name)) return false;
   const smp = vals.slice(0, 500);
+  if (COUNT_NAME_RE.test(name.trim()) && smp.length && smp.filter(v => NUM_RE.test(v)).length / smp.length >= 0.9) return false; // 숫자로 된 집계 열
   if (smp.length && smp.filter(v => /^https?:\/\//.test(v)).length / smp.length >= 0.5) return false; // 링크(URL)
   if (PII_NAME_RE.test(name)) return true;
   const toks = smp.flatMap(v => v.match(TOKEN_RE) || []);
